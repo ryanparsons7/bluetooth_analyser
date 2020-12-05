@@ -1,2 +1,2 @@
 # Python 3 Bluetooth Analyser
-In this application
+This repository is for my Honours Project at Edinburgh Napier University for Cybersecurity and Forensics.
