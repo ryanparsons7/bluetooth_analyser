@@ -1,7 +1,16 @@
+#!/usr/bin/env python3
+"""
+Ryan Parsons\'s Python 3 Bluetooth Analyser Application, created for BENG Cybersecurity and Forensics Honours Project 2020/2021.
+"""
+
+__author__ = "Ryan Parsons"
+__version__ = "0.1.0"
+__license__ = "GNU General Public License v3.0"
+
 import PySimpleGUI as sg # Importing PySimpleGUI Module for GUI Functionality
 import pyshark # Importing pyshark for Wireshark functionality needed for parsing data
-import sys
-import datetime
+import sys # Importing sys module for system based functions
+import datetime # Importing datetime module for date and time functions
 
 sg.theme('BlueMono')	# Theme choice, blue because of Bluetooth!
 
@@ -12,8 +21,10 @@ def ImportPCAP():
         print(imported_pcap_location)
         if imported_pcap_location == '':
             sg.popup_error('No PCAP File Selected', title=None)
+            return(imported_pcap_location)
         elif not imported_pcap_location.endswith(('.pcapng','.pcap')):
             sg.popup_error('The file selected is not a PCAP file.', title=None)
+            return(imported_pcap_location)
         elif not imported_pcap_location == '':
             print(f'Returned the pcap file location as {imported_pcap_location}')
             return(imported_pcap_location)
@@ -77,35 +88,44 @@ layout = [
 # Create the window with a title and a window icon.
 window = sg.Window('Bluetooth Sniffing Application', layout, icon='icons/bluetooth.ico')
 
-# Create cap variable that starts empty, so if the user tries to export a pcap file with no capture loaded yet, it will pop an error popup
-cap = ''
+def main():
+    """ Main entry point of the app """
 
-# The event loop
-while True:
-    event, values = window.read()   # Read the event that happened and the values dictionary
-    print(event, values)
-    if event == sg.WIN_CLOSED or event == 'Exit':     # If user closed window with X or if user clicked "Exit" button then exit
-        break
-    if event == 'About':
-        OpenAboutPopup()
-    if event == 'Live Capture':
-        capture = pyshark.LiveCapture(interface='nRF Sniffer for Bluetooth LE COM4')
-        capture.sniff(timeout=50)
-        print(capture)
-    if event == 'Export PCAP':
-        if cap == '':
-            sg.popup('No Live Capture Has Been Completed to Export, Please Run a Live Capture', title='No Capture', keep_on_top=True)
-    if event == 'Import PCAP':
-        pcap_file_location = ImportPCAP() # Get the file location that the user selects
-        if not pcap_file_location =='':
-            print(pcap_file_location)
-            cap = pyshark.FileCapture(pcap_file_location) # Get the capture from the file into a variable
-            if CheckForBLE(cap):
-                print(f'Bluetooth packets found in {pcap_file_location}, continuing') # File contains Bluetooth packets, will now continue to parse
-            else:
-                sg.popup_error(f'No Bluetooth LE packets found in {pcap_file_location}, please import another file.', title=None) # File doesn't contain Bluetooth LE packets, informs user to use another file.
-            packet1 = cap[0]
-            AddPacketsToList(cap)
-            window.FindElement('PacketList').Update(values=packetlistbox)
+    # Create cap variable that starts empty, so if the user tries to export a pcap file with no capture loaded yet, it will pop an error popup
+    cap = ''
 
-window.close()
+    # The event loop
+    while True:
+        event, values = window.read()   # Read the event that happened and the values dictionary
+        print(event, values)
+        if event == sg.WIN_CLOSED or event == 'Exit':     # If user closed window with X or if user clicked "Exit" button then exit
+            break
+        if event == 'About':
+            OpenAboutPopup()
+        if event == 'Live Capture':
+            #capture = pyshark.LiveCapture(interface='COM4')
+            #capture.sniff(timeout=10)
+            #print(capture)
+            print('Live Capture TBD')
+        if event == 'Export PCAP':
+            if cap == '':
+                sg.popup('No Live Capture Has Been Completed to Export, Please Run a Live Capture', title='No Capture', keep_on_top=True)
+        if event == 'Import PCAP':
+            pcap_file_location = ImportPCAP() # Get the file location that the user selects
+            if not pcap_file_location =='':
+                print(pcap_file_location)
+                cap = pyshark.FileCapture(pcap_file_location) # Get the capture from the file into a variable
+                if CheckForBLE(cap):
+                    print(f'Bluetooth packets found in {pcap_file_location}, continuing') # File contains Bluetooth packets, will now continue to parse
+                else:
+                    sg.popup_error(f'No Bluetooth LE packets found in {pcap_file_location}, please import another file.', title=None) # File doesn't contain Bluetooth LE packets, informs user to use another file.
+                packet1 = cap[0]
+                AddPacketsToList(cap)
+                window.FindElement('PacketList').Update(values=packetlistbox)
+
+    window.close()
+
+
+if __name__ == "__main__":
+    """ This is executed when run from the command line """
+    main()
