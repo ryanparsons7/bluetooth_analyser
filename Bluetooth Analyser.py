@@ -14,16 +14,16 @@ import datetime # Importing datetime module for date and time functions
 
 sg.theme('BlueMono')	# Theme choice, blue because of Bluetooth!
 
-def ImportPCAP():
+def GetFileLocation():
     try:
         imported_pcap_location = ''
-        imported_pcap_location = sg.popup_get_file('Please enter the file location for the PCAP file or click browse.', file_types=(("PCAPNG Files", "*.pcapng"),("PCAP Files", "*.pcap")))
+        imported_pcap_location = sg.popup_get_file('Please enter the file location for the PCAP file or click browse.', file_types=(("PCAPNG Files", "*.pcapng"),("PCAP Files", "*.pcap")), icon='icons/bluetooth.ico', keep_on_top=True)
         print(imported_pcap_location)
         if imported_pcap_location == '':
-            sg.popup_error('No PCAP File Selected', title=None)
+            sg.popup_error('No PCAP File Selected', title=None, icon='icons/bluetooth.ico')
             return(imported_pcap_location)
         elif not imported_pcap_location.endswith(('.pcapng','.pcap')):
-            sg.popup_error('The file selected is not a PCAP file.', title=None)
+            sg.popup_error('The file selected is not a PCAP file.', title=None, icon='icons/bluetooth.ico')
             return(imported_pcap_location)
         elif not imported_pcap_location == '':
             print(f'Returned the pcap file location as {imported_pcap_location}')
@@ -32,7 +32,7 @@ def ImportPCAP():
         print("Unexpected error:", sys.exc_info()[0])
 
 def OpenAboutPopup():
-    sg.popup(about_popup, title='About', keep_on_top=True)
+    sg.popup(about_popup, title='About', keep_on_top=True, icon='icons/bluetooth.ico')
 
 def CheckForBLE(capture):
     for i in capture:
@@ -52,6 +52,23 @@ def AddPacketsToList(capture):
                 packetlistbox.append(f'Time: {utc_time} UTC,\t Advertising Address: {i.btle.advertising_address},\t\t RSSI: {i.nordic_ble.rssi}dBm, \tChannel: {i.nordic_ble.channel}')
             except Exception as e:
                 print(e)
+
+def ImportPCAP():
+    pcap_file_location = GetFileLocation() # Get the file location that the user selects
+    if not (pcap_file_location == None or pcap_file_location == ''):
+        cap = pyshark.FileCapture(pcap_file_location) # Get the capture from the file into a variable
+        if CheckForBLE(cap):
+            print(f'Bluetooth packets found in {pcap_file_location}, continuing') # File contains Bluetooth packets, will now continue to parse
+        else:
+            sg.popup_error(f'No Bluetooth LE packets found in {pcap_file_location}, please import another file.', title=None, icon='icons/bluetooth.ico') # File doesn't contain Bluetooth LE packets, informs user to use another file.
+        packet1 = cap[0]
+        AddPacketsToList(cap)
+        window.FindElement('PacketList').Update(values=packetlistbox)
+    else:
+        print('No file was selected, Stopped importing')
+
+def PacketDetails(packet_number):
+    sg.popup_scrolled(title=f'Packet {packet_number} Details', icon='icons/bluetooth.ico')
 
 
 packetlistbox = []
@@ -109,19 +126,9 @@ def main():
             print('Live Capture TBD')
         if event == 'Export PCAP':
             if cap == '':
-                sg.popup('No Live Capture Has Been Completed to Export, Please Run a Live Capture', title='No Capture', keep_on_top=True)
+                sg.popup('No Live Capture Has Been Completed to Export, Please Run a Live Capture', title='No Capture', keep_on_top=True, icon='icons/bluetooth.ico')
         if event == 'Import PCAP':
-            pcap_file_location = ImportPCAP() # Get the file location that the user selects
-            if not pcap_file_location =='':
-                print(pcap_file_location)
-                cap = pyshark.FileCapture(pcap_file_location) # Get the capture from the file into a variable
-                if CheckForBLE(cap):
-                    print(f'Bluetooth packets found in {pcap_file_location}, continuing') # File contains Bluetooth packets, will now continue to parse
-                else:
-                    sg.popup_error(f'No Bluetooth LE packets found in {pcap_file_location}, please import another file.', title=None) # File doesn't contain Bluetooth LE packets, informs user to use another file.
-                packet1 = cap[0]
-                AddPacketsToList(cap)
-                window.FindElement('PacketList').Update(values=packetlistbox)
+            ImportPCAP()
 
     window.close()
 
