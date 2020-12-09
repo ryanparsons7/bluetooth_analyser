@@ -126,6 +126,14 @@ def ParseBluetoothPCAP(capture):
             packet_information['Packet Type'] = 'N/A'
             print(e)
         
+        
+        # Try to fill in the RSSI, if an exception occurs, fill in as N/A
+        try:
+            packet_information['RSSI'] = packet.nordic_ble.rssi
+        except Exception as e:
+            packet_information['RSSI'] = 'N/A'
+            print(e)
+        
         packet_number = packet_number + 1
         parsed_dict.append(packet_information)
     return parsed_dict
