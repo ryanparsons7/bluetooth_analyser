@@ -44,31 +44,32 @@ def CheckForBLE(capture):
     return False
 
 def AddPacketsToList(capture):
-    for i in capture:
-        if i.btle:
-            try:
-                epoch_time = int(float(i.sniff_timestamp))
-                utc_time = datetime.datetime.fromtimestamp(epoch_time).strftime('%Y-%m-%d %H:%M:%S')
-                packetlistbox.append(f'Time: {utc_time} UTC,\t Advertising Address: {i.btle.advertising_address},\t\t RSSI: {i.nordic_ble.rssi}dBm, \tChannel: {i.nordic_ble.channel}')
-            except Exception as e:
-                print(e)
+    packet_list = []
+    packet_number = 1
+    for packet in capture:
+        try:
+            packet_list.append(f'Packet {packet_number}, Address: {packet.btle.advertising_address}')
+        except Exception as e:
+            packet_list.append(f'Packet {packet_number}, Completely Malformed Packet')
+            print(e)
+        packet_number = packet_number + 1
+    return packet_list
 
 def ImportPCAP():
     pcap_file_location = GetFileLocation() # Get the file location that the user selects
     if not (pcap_file_location == None or pcap_file_location == ''):
-        cap = pyshark.FileCapture(pcap_file_location) # Get the capture from the file into a variable
+        cap = pyshark.FileCapture(pcap_file_location, use_json=True) # Get the capture from the file into a variable and use JSON format instead
         if CheckForBLE(cap):
             print(f'Bluetooth packets found in {pcap_file_location}, continuing') # File contains Bluetooth packets, will now continue to parse
+            packetlistbox = AddPacketsToList(cap)
+            window.FindElement('PacketList').Update(values=packetlistbox)
         else:
             sg.popup_error(f'No Bluetooth LE packets found in {pcap_file_location}, please import another file.', title=None, icon='icons/bluetooth.ico') # File doesn't contain Bluetooth LE packets, informs user to use another file.
-        packet1 = cap[0]
-        AddPacketsToList(cap)
-        window.FindElement('PacketList').Update(values=packetlistbox)
     else:
         print('No file was selected, Stopped importing')
 
 def PacketDetails(packet_number):
-    sg.popup_scrolled(title=f'Packet {packet_number} Details', icon='icons/bluetooth.ico')
+    sg.popup_scrolled('Hello\nMy\nName\nIs\nRyan', title=f'Packet {packet_number} Details')
 
 
 packetlistbox = []
