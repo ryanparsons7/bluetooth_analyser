@@ -15,6 +15,9 @@ import datetime # Importing datetime module for date and time functions
 sg.theme('BlueMono')	# Theme choice, blue because of Bluetooth!
 
 def GetFileLocation():
+    """ Opens the importing popup window for the user, allowing them to select a file. Once a file is selected, it is checked to see if it has the correct
+        file extensions. Will return the file location of a working file that was selected. """
+
     try:
         imported_pcap_location = ''
         imported_pcap_location = sg.popup_get_file('Please enter the file location for the PCAP file or click browse.', file_types=(("PCAPNG Files", "*.pcapng"),("PCAP Files", "*.pcap")), icon='icons/bluetooth.ico', keep_on_top=True)
@@ -32,9 +35,14 @@ def GetFileLocation():
         print("Unexpected error:", sys.exc_info()[0])
 
 def OpenAboutPopup():
+    """ Shows the about popup window, showing information about the application. """
+
+    about_popup = f'Bluetooth Packet Analyser Created by Ryan Parsons\nNapier University, Cybersecurity and Forensics Honours Project'
     sg.popup(about_popup, title='About', keep_on_top=True, icon='icons/bluetooth.ico')
 
 def CheckForBLE(capture):
+    """ Checks the capture variable for any BTLE headers, returns true or false. """
+
     for i in capture:
         try:
             if i.btle:
@@ -44,12 +52,17 @@ def CheckForBLE(capture):
     return False
 
 def AddPacketsToList(parsed_dictionary):
+    """ Creates the basic list shown on the main application window. """
+
     packet_list = []
     for packet in parsed_dictionary:
         packet_list.append(f'Packet #{packet["Packet Number"]} - Advertising Address: {packet["Advertising Address"]} - Scanning Address: {packet["Scanning Address"]} - Packet Type: {packet["Packet Type"]}')
     return packet_list
 
 def ImportPCAP():
+    """ Opens the importing popup window for the user, allowing them to select a file. Once a file is selected, it is checked to see if it has the correct
+        file extensions and if it contains any BTLE headers. Will return the file location of a working file that was selected. """
+
     pcap_file_location = GetFileLocation() # Get the file location that the user selects
     if not (pcap_file_location == None or pcap_file_location == ''):
         cap = pyshark.FileCapture(pcap_file_location, use_json=True) # Get the capture from the file into a variable and use JSON format instead
@@ -64,6 +77,8 @@ def ImportPCAP():
         print('No file was selected, Stopped importing')
 
 def ParseBluetoothPCAP(capture):
+    """ Takes in a capture variable from pyshark and seperates the data down into a arrayed dictionary, returning the dictionary when done """
+
     parsed_dict = [] # Creat an empty list to fill and return at the end of the function
     packet_number = 1 # Set the first packet number as 1, this will be incremented with each packet
 
@@ -72,6 +87,7 @@ def ParseBluetoothPCAP(capture):
         '0x00000000': 'ADV_IND',
         '0x00000002': 'ADV_NONCONN_IND',
         '0x00000003': 'SCAN_REQ',
+        '0x00000004': 'SCAN_RSP',
         '0x00000006': 'ADV_SCAN_IND'
     }
 
@@ -81,6 +97,7 @@ def ParseBluetoothPCAP(capture):
             'Packet Number': '',
             'Advertising Address': '',
             'Scanning Address': '',
+            'RSSI': '',
             'Packet Type': ''
             }
         
@@ -113,16 +130,10 @@ def ParseBluetoothPCAP(capture):
         parsed_dict.append(packet_information)
     return parsed_dict
 
-# PDU type is packet.btle.advertising_header_tree.pdu_type
-# 0x00000003 is SCAN_REQ, 6 is ADV_SCAN_IND, 2 is ADV_NONCONN_IND, 0 is ADV_IND
-
-
 packetlistbox = []
 devicelistbox = []
 connectionslistbox = []
 capture_dict = {}
-
-about_popup = f'Bluetooth Packet Analyser Created by Ryan Parsons\nNapier University, Cybersecurity and Forensics Honours Project'
 
 frame_layout_all_packets = [
                   [sg.Listbox(packetlistbox, key='PacketList', size=(120, 60))]
