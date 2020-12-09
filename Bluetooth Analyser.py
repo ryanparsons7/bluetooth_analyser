@@ -43,16 +43,10 @@ def CheckForBLE(capture):
             pass
     return False
 
-def AddPacketsToList(capture):
+def AddPacketsToList(parsed_dictionary):
     packet_list = []
-    packet_number = 1
-    for packet in capture:
-        try:
-            packet_list.append(f'Packet {packet_number}, Address: {packet.btle.advertising_address}')
-        except Exception as e:
-            packet_list.append(f'Packet {packet_number}, Completely Malformed Packet')
-            print(e)
-        packet_number = packet_number + 1
+    for packet in parsed_dictionary:
+        packet_list.append(f'Packet #{packet["Packet Number"]} - Advertising Address: {packet["Advertising Address"]} - Scanning Address: {packet["Scanning Address"]} - Packet Type: {packet["Packet Type"]}')
     return packet_list
 
 def ImportPCAP():
@@ -61,20 +55,72 @@ def ImportPCAP():
         cap = pyshark.FileCapture(pcap_file_location, use_json=True) # Get the capture from the file into a variable and use JSON format instead
         if CheckForBLE(cap):
             print(f'Bluetooth packets found in {pcap_file_location}, continuing') # File contains Bluetooth packets, will now continue to parse
-            packetlistbox = AddPacketsToList(cap)
+            capture_dict = ParseBluetoothPCAP(cap)
+            packetlistbox = AddPacketsToList(capture_dict)
             window.FindElement('PacketList').Update(values=packetlistbox)
         else:
             sg.popup_error(f'No Bluetooth LE packets found in {pcap_file_location}, please import another file.', title=None, icon='icons/bluetooth.ico') # File doesn't contain Bluetooth LE packets, informs user to use another file.
     else:
         print('No file was selected, Stopped importing')
 
-def PacketDetails(packet_number):
-    sg.popup_scrolled('Hello\nMy\nName\nIs\nRyan', title=f'Packet {packet_number} Details')
+def ParseBluetoothPCAP(capture):
+    parsed_dict = [] # Creat an empty list to fill and return at the end of the function
+    packet_number = 1 # Set the first packet number as 1, this will be incremented with each packet
+
+    # Define dictionary of PDU types, so the hex can be converted easily from each packet
+    PDU_Type_Dict = {
+        '0x00000000': 'ADV_IND',
+        '0x00000002': 'ADV_NONCONN_IND',
+        '0x00000003': 'SCAN_REQ',
+        '0x00000006': 'ADV_SCAN_IND'
+    }
+
+    for packet in capture:
+        # Define empty dictionary for the packet, to fill in details later
+        packet_information = { 
+            'Packet Number': '',
+            'Advertising Address': '',
+            'Scanning Address': '',
+            'Packet Type': ''
+            }
+        
+        # Filled in the packet number, no exception needed
+        packet_information['Packet Number'] = packet_number
+
+        # Try to fill in the advertising address, if an exception occurs, fill in as N/A
+        try:
+            packet_information['Advertising Address'] = packet.btle.advertising_address
+        except Exception as e:
+            packet_information['Advertising Address'] = 'N/A'
+            print(e)
+    
+        # Try to fill in the scanning address, if an exception occurs, such as it not existing, fill in as N/A
+        try:
+            packet_information['Scanning Address'] = packet.btle.scanning_address
+        except Exception as e:
+            packet_information['Scanning Address'] = 'N/A'
+            print(e)
+        
+        
+        # Try to fill in the PDU type converted from HEX string to proper name, if an exception occurs, fill in as N/A
+        try:
+            packet_information['Packet Type'] = PDU_Type_Dict[packet.btle.advertising_header_tree.pdu_type]
+        except Exception as e:
+            packet_information['Packet Type'] = 'N/A'
+            print(e)
+        
+        packet_number = packet_number + 1
+        parsed_dict.append(packet_information)
+    return parsed_dict
+
+# PDU type is packet.btle.advertising_header_tree.pdu_type
+# 0x00000003 is SCAN_REQ, 6 is ADV_SCAN_IND, 2 is ADV_NONCONN_IND, 0 is ADV_IND
 
 
 packetlistbox = []
 devicelistbox = []
 connectionslistbox = []
+capture_dict = {}
 
 about_popup = f'Bluetooth Packet Analyser Created by Ryan Parsons\nNapier University, Cybersecurity and Forensics Honours Project'
 
