@@ -73,7 +73,7 @@ def ImportPCAP():
             print(f'Bluetooth packets found in {pcap_file_location}, continuing') # File contains Bluetooth packets, will now continue to parse
             capture_dict = ParseBluetoothPCAP(cap)
             packetlistbox = AddPacketsToList(capture_dict)
-            window.FindElement('PacketListBox').Update(values=packetlistbox)
+            MainWindow.FindElement('PacketListBox').Update(values=packetlistbox)
         else:
             sg.popup_error(f'No Bluetooth LE packets found in {pcap_file_location}, please import another file.', title=None, icon='icons/bluetooth.ico') # File doesn't contain Bluetooth LE packets, informs user to use another file.
     else:
@@ -82,12 +82,28 @@ def ImportPCAP():
 
 def PacketDetailsPopup(packet_number, capture_dict):
     packet_number = int(packet_number) - 1
-    sg.popup_scrolled(
-        f'Packet Number: {packet_number + 1}\nAdvertising Address: {capture_dict[packet_number].get("Advertising Address")}\nScanning Address: {capture_dict[packet_number].get("Scanning Address")}\nRSSI: {capture_dict[packet_number].get("RSSI")} dBm\nFrequency Channel: {capture_dict[packet_number].get("Channel")}\nPacket Type: {capture_dict[packet_number].get("Packet Type")}',
-        keep_on_top=True,
-        background_color='lightblue',
-        no_titlebar=True
-        )
+    packet_detail_list = [
+        f'Packet Number: {packet_number + 1}',
+        f'Advertising Address: {capture_dict[packet_number].get("Advertising Address")}',
+        f'Scanning Address: {capture_dict[packet_number].get("Scanning Address")}',
+        f'RSSI: {capture_dict[packet_number].get("RSSI")} dBm',
+        f'Frequency Channel: {capture_dict[packet_number].get("Channel")}',
+        f'Packet Type: {capture_dict[packet_number].get("Packet Type")}']
+
+
+    layout2 = [[sg.Listbox(packet_detail_list, size=(60, 29), enable_events=True, font="TkFixedFont", key='PacketDetails')],       # note must create a layout from scratch every time. No reuse
+                [sg.Button('Exit')]]
+
+    PacketDetailsWindow = sg.Window('Packet Details', layout2, modal=True, icon='icons/bluetooth.ico')
+    while True:
+        event2, values2 = PacketDetailsWindow.read()
+        if event2 == sg.WIN_CLOSED or event2 == 'Exit':
+            PacketDetailsWindow.close()
+            #MainWindow.UnHide()
+            break
+        if event2 == 'PacketDetails':
+            packet_detail = values2["PacketDetails"][0]
+            sg.popup(f'You clicked on {packet_detail}', title='More Info')
 
 def PopulateUniqueDevicesList(capture_dict):
     AuxList = []
@@ -98,7 +114,7 @@ def PopulateUniqueDevicesList(capture_dict):
             AuxList.append(AdvertisingAddress)
         if ScanningAddress not in AuxList and not ScanningAddress == 'N/A':
             AuxList.append(ScanningAddress)
-    window.FindElement('DeviceListBox').Update(values=AuxList)
+    MainWindow.FindElement('DeviceListBox').Update(values=AuxList)
 
 def ParseBluetoothPCAP(capture):
     """ Takes in a capture variable from pyshark and seperates the data down into a arrayed dictionary, returning the dictionary when done """
@@ -202,7 +218,7 @@ layout = [
 ]
 
 # Create the window with a title and a window icon.
-window = sg.Window('Bluetooth Sniffing Application', layout, icon='icons/bluetooth.ico')
+MainWindow = sg.Window('Bluetooth Sniffing Application', layout, icon='icons/bluetooth.ico')
 
 def main():
     """ Main entry point of the app """
@@ -210,30 +226,36 @@ def main():
     # Create cap variable that starts empty, so if the user tries to export a pcap file with no capture loaded yet, it will pop an error popup
     cap = ''
 
+    PacketDetailsWindowActive = False
+
     # The event loop
     while True:
-        event, values = window.read()   # Read the event that happened and the values dictionary
-        print(event, values)
-        if event == sg.WIN_CLOSED or event == 'Exit':     # If user closed window with X or if user clicked "Exit" button then exit
+        event1, values1 = MainWindow.read()   # Read the event that happened and the values dictionary
+        print(event1, values1)
+        if event1 == sg.WIN_CLOSED or event1 == 'Exit':     # If user closed window with X or if user clicked "Exit" button then exit
             break
-        if event == 'About':
+        if event1 == 'About':
             OpenAboutPopup()
-        if event == 'Live Capture':
+        if event1 == 'Live Capture':
             #capture = pyshark.LiveCapture(interface='COM4')
             #capture.sniff(timeout=10)
             #print(capture)
             print('Live Capture TBD')
-        if event == 'Export PCAP':
+        if event1 == 'Export PCAP':
             if cap == '':
                 sg.popup('No Live Capture Has Been Completed to Export, Please Run a Live Capture', title='No Capture', keep_on_top=True, icon='icons/bluetooth.ico')
-        if event == 'Import PCAP':
+        if event1 == 'Import PCAP':
             capture_dictionary = ImportPCAP()
             PopulateUniqueDevicesList(capture_dictionary)
-        if event == 'PacketListBox':
-            packet_number = re.search(r'\d+', values["PacketListBox"][0])
-            PacketDetailsPopup(packet_number.group(0), capture_dictionary)
+        if event1 == 'PacketListBox' and not PacketDetailsWindowActive:
+            packet_number = re.search(r'\d+', values1["PacketListBox"][0]).group(0)
+            PacketDetailsWindowActive = True
+            #MainWindow.Hide()
 
-    window.close()
+            PacketDetailsPopup(packet_number, capture_dictionary)
+            PacketDetailsWindowActive = False
+
+    MainWindow.close()
 
 
 if __name__ == "__main__":
