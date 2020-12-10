@@ -11,6 +11,7 @@ import PySimpleGUI as sg # Importing PySimpleGUI Module for GUI Functionality
 import pyshark # Importing pyshark for Wireshark functionality needed for parsing data
 import sys # Importing sys module for system based functions
 import datetime # Importing datetime module for date and time functions
+import re
 
 sg.theme('BlueMono')	# Theme choice, blue because of Bluetooth!
 
@@ -56,7 +57,9 @@ def AddPacketsToList(parsed_dictionary):
 
     packet_list = []
     for packet in parsed_dictionary:
-        packet_list.append(f'Packet #{packet["Packet Number"]} - Advertising Address: {packet["Advertising Address"]} - Scanning Address: {packet["Scanning Address"]} - Packet Type: {packet["Packet Type"]}')
+        packet_list.append(
+            f'{"Packet #" + str(packet["Packet Number"]):<13} - {"Advertising Address: " + packet["Advertising Address"]:<38} - Packet Type: {packet["Packet Type"]}'
+            )
     return packet_list
 
 def ImportPCAP():
@@ -70,11 +73,32 @@ def ImportPCAP():
             print(f'Bluetooth packets found in {pcap_file_location}, continuing') # File contains Bluetooth packets, will now continue to parse
             capture_dict = ParseBluetoothPCAP(cap)
             packetlistbox = AddPacketsToList(capture_dict)
-            window.FindElement('PacketList').Update(values=packetlistbox)
+            window.FindElement('PacketListBox').Update(values=packetlistbox)
         else:
             sg.popup_error(f'No Bluetooth LE packets found in {pcap_file_location}, please import another file.', title=None, icon='icons/bluetooth.ico') # File doesn't contain Bluetooth LE packets, informs user to use another file.
     else:
         print('No file was selected, Stopped importing')
+    return(capture_dict)
+
+def PacketDetailsPopup(packet_number, capture_dict):
+    packet_number = int(packet_number) - 1
+    sg.popup_scrolled(
+        f'Packet Number: {packet_number + 1}\nAdvertising Address: {capture_dict[packet_number].get("Advertising Address")}\nScanning Address: {capture_dict[packet_number].get("Scanning Address")}\nRSSI: {capture_dict[packet_number].get("RSSI")} dBm\nFrequency Channel: {capture_dict[packet_number].get("Channel")}\nPacket Type: {capture_dict[packet_number].get("Packet Type")}',
+        keep_on_top=True,
+        background_color='lightblue',
+        no_titlebar=True
+        )
+
+def PopulateUniqueDevicesList(capture_dict):
+    AuxList = []
+    for packet in capture_dict:
+        AdvertisingAddress = packet.get("Advertising Address")
+        ScanningAddress = packet.get("Scanning Address")
+        if AdvertisingAddress not in AuxList and not AdvertisingAddress == 'N/A':
+            AuxList.append(AdvertisingAddress)
+        if ScanningAddress not in AuxList and not ScanningAddress == 'N/A':
+            AuxList.append(ScanningAddress)
+    window.FindElement('DeviceListBox').Update(values=AuxList)
 
 def ParseBluetoothPCAP(capture):
     """ Takes in a capture variable from pyshark and seperates the data down into a arrayed dictionary, returning the dictionary when done """
@@ -98,6 +122,7 @@ def ParseBluetoothPCAP(capture):
             'Advertising Address': '',
             'Scanning Address': '',
             'RSSI': '',
+            'Channel': '',
             'Packet Type': ''
             }
         
@@ -106,14 +131,14 @@ def ParseBluetoothPCAP(capture):
 
         # Try to fill in the advertising address, if an exception occurs, fill in as N/A
         try:
-            packet_information['Advertising Address'] = packet.btle.advertising_address
+            packet_information['Advertising Address'] = packet.btle.advertising_address.upper()
         except Exception as e:
             packet_information['Advertising Address'] = 'N/A'
             print(e)
     
         # Try to fill in the scanning address, if an exception occurs, such as it not existing, fill in as N/A
         try:
-            packet_information['Scanning Address'] = packet.btle.scanning_address
+            packet_information['Scanning Address'] = packet.btle.scanning_address.upper()
         except Exception as e:
             packet_information['Scanning Address'] = 'N/A'
             print(e)
@@ -134,8 +159,16 @@ def ParseBluetoothPCAP(capture):
             packet_information['RSSI'] = 'N/A'
             print(e)
         
-        packet_number = packet_number + 1
-        parsed_dict.append(packet_information)
+        
+        # Try to fill in the Channel Number, if an exception occurs, fill in as N/A
+        try:
+            packet_information['Channel'] = packet.nordic_ble.channel
+        except Exception as e:
+            packet_information['Channel'] = 'N/A'
+            print(e)
+        
+        packet_number = packet_number + 1 # Increment the packet number before processing the next packet
+        parsed_dict.append(packet_information) # Append the dictionary to the array
     return parsed_dict
 
 packetlistbox = []
@@ -144,11 +177,11 @@ connectionslistbox = []
 capture_dict = {}
 
 frame_layout_all_packets = [
-                  [sg.Listbox(packetlistbox, key='PacketList', size=(120, 60))]
+                  [sg.Listbox(packetlistbox, key='PacketListBox', size=(120, 60), enable_events=True, font="TkFixedFont")]
                ]
 
 frame_layout_device_list = [
-                  [sg.Listbox(devicelistbox, size=(60, 29))]
+                  [sg.Listbox(devicelistbox, key='DeviceListBox', size=(60, 29))]
                ]
 
 frame_layout_connections_list = [
@@ -194,7 +227,11 @@ def main():
             if cap == '':
                 sg.popup('No Live Capture Has Been Completed to Export, Please Run a Live Capture', title='No Capture', keep_on_top=True, icon='icons/bluetooth.ico')
         if event == 'Import PCAP':
-            ImportPCAP()
+            capture_dictionary = ImportPCAP()
+            PopulateUniqueDevicesList(capture_dictionary)
+        if event == 'PacketList':
+            packet_number = re.search(r'\d+', values["PacketList"][0])
+            PacketDetailsPopup(packet_number.group(0), capture_dictionary)
 
     window.close()
 
