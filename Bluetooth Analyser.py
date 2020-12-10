@@ -229,8 +229,8 @@ def main():
         if event == 'Import PCAP':
             capture_dictionary = ImportPCAP()
             PopulateUniqueDevicesList(capture_dictionary)
-        if event == 'PacketList':
-            packet_number = re.search(r'\d+', values["PacketList"][0])
+        if event == 'PacketListBox':
+            packet_number = re.search(r'\d+', values["PacketListBox"][0])
             PacketDetailsPopup(packet_number.group(0), capture_dictionary)
 
     window.close()
