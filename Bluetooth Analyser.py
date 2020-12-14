@@ -72,23 +72,25 @@ def ImportPCAP():
         if CheckForBLE(cap):
             print(f'Bluetooth packets found in {pcap_file_location}, continuing') # File contains Bluetooth packets, will now continue to parse
             capture_dict = ParseBluetoothPCAP(cap)
-            packetlistbox = AddPacketsToList(capture_dict)
-            MainWindow.FindElement('PacketListBox').Update(values=packetlistbox)
         else:
             sg.popup_error(f'No Bluetooth LE packets found in {pcap_file_location}, please import another file.', title=None, icon='icons/bluetooth.ico') # File doesn't contain Bluetooth LE packets, informs user to use another file.
     else:
         print('No file was selected, Stopped importing')
+        return
     return(capture_dict)
 
-def PacketDetailsPopup(packet_number, capture_dict):
+def PacketDetailsPopup(packet_number, capture_dict_array):
+    """ Takes in a packet number and capure information in the form of a array of dictionaries when the user clicks on a specific packet.
+        This will then create a window containing the information regarding that packet """
+
     packet_number = int(packet_number) - 1
     packet_detail_list = [
         f'Packet Number: {packet_number + 1}',
-        f'Advertising Address: {capture_dict[packet_number].get("Advertising Address")}',
-        f'Scanning Address: {capture_dict[packet_number].get("Scanning Address")}',
-        f'RSSI: {capture_dict[packet_number].get("RSSI")} dBm',
-        f'Frequency Channel: {capture_dict[packet_number].get("Channel")}',
-        f'Packet Type: {capture_dict[packet_number].get("Packet Type")}']
+        f'Advertising Address: {capture_dict_array[packet_number].get("Advertising Address")}',
+        f'Scanning Address: {capture_dict_array[packet_number].get("Scanning Address")}',
+        f'RSSI: {capture_dict_array[packet_number].get("RSSI")} dBm',
+        f'Frequency Channel: {capture_dict_array[packet_number].get("Channel")}',
+        f'Packet Type: {capture_dict_array[packet_number].get("Packet Type")}']
 
 
     layout2 = [[sg.Listbox(packet_detail_list, size=(60, 29), enable_events=True, font="TkFixedFont", key='PacketDetails')],       # note must create a layout from scratch every time. No reuse
@@ -103,9 +105,41 @@ def PacketDetailsPopup(packet_number, capture_dict):
             break
         if event2 == 'PacketDetails':
             packet_detail = values2["PacketDetails"][0]
-            sg.popup(f'You clicked on {packet_detail}', title='More Info')
+            ExpandedPacketDetails(packet_detail)
+
+def ExpandedPacketDetails(detail):
+    """ Function that inputs the detail for the packet that was selected and shows popups of the requested information """
+
+    
+    # Dictionary containing packet details that are given to the user if they click on the specific packet detail.
+    expanded_packet_detail_list = { 
+            'Packet Number': 'This is the number of the packet in the order is was captured, starting from 1.',
+            'Advertising Address': 'This address is of the advertising device\nThis can either be sent by the advertising device itself or a device asking that device for additional information in the from of a ADV_RSP packet, by sending a ADV_REQ packet.',
+            'Scanning Address': 'This address is only used if the scanning device sends a packet to an advertising device, or vice-versa.\nFor example, a scanning device sends an advertising device a ADV_REQ packet, requesting for more information about the device.',
+            'RSSI': 'RSSI or Recieved Signal Strength Indicator, is the measurement of power level at the receieving device.\nGenerally, the lower the number, the further the device is away from the reciever.',
+            'Frequency Channel': 'This is the freqency band channel that the packet was captured on.\nChannels that are used for advertising are 37, 38, 39. With the rest being used for data.'
+            }
+    # Dictionary containing packet type details that are provided when the user clicks on the packet type information.
+    expanded_packet_type_detail_list = { 
+            'ADV_IND': 'Indicates the advertising device is connectable and is using undirected advertising.',
+            'ADV_DIRECT_IND': 'Indicates the advertising device is connectable by only one specific central device and is using directed advertising.',
+            'ADV_NONCONN_IND': 'Indicates a non-connectable advertising device, that also cannot respond to scanning requests for more info.',
+            'SCAN_REQ': 'A scan request from a central device to a advertising device, requesting additional infromation about the device.',
+            'SCAN_RSP': 'A response to the scan request (SCAN_REQ), containing additional information about the peripheral device.',
+            'CONNECT_REQ': 'A connection request from a central device to a peripheral device.',
+            'ADV_SCAN_IND': 'Indicates a non-connectable advertising device, that however, can respond to scanning requests for more info.'
+            }
+    detail_string = (re.search(r'.*: ', detail).group(0)[:-2]) # Extract the packet detail string, so it can be used to get the correct response from the dictionary.
+    # If statement detecting if packet type was selected. If so, go through specific reponse for packet types. If it was not, continue with the other detail responses.
+    if detail_string == 'Packet Type':
+        type_string = (re.search(r':.*', detail).group(0)[2:]) # Get the packet type.
+        sg.popup(expanded_packet_type_detail_list[type_string], title=type_string, keep_on_top=True, icon='icons/bluetooth.ico') # Popup showing packet type information.
+    else:
+        sg.popup(expanded_packet_detail_list[detail_string], title=detail_string, keep_on_top=True, icon='icons/bluetooth.ico') # Popup showing packet detail information, no packet type info.
 
 def PopulateUniqueDevicesList(capture_dict):
+    """ Function that takes in the capture details and populates the unique devices list """
+
     AuxList = []
     for packet in capture_dict:
         AdvertisingAddress = packet.get("Advertising Address")
@@ -116,6 +150,30 @@ def PopulateUniqueDevicesList(capture_dict):
             AuxList.append(ScanningAddress)
     MainWindow.FindElement('DeviceListBox').Update(values=AuxList)
 
+def PopulateUniqueConnectionsList(capture_dict):
+    """ Function that takes in the capture details and populates the unique connections list """
+
+    AuxList = []
+    for packet in capture_dict:
+        AdvertisingAddress = packet.get("Advertising Address")
+        ScanningAddress = packet.get("Scanning Address")
+        if AdvertisingAddress != 'N/A' and ScanningAddress != 'N/A':
+            if packet.get("Packet Type") == 'SCAN_REQ':
+                connection = f'{ScanningAddress} -> {AdvertisingAddress}'
+                print(ScanningAddress)
+            else:
+                connection = f'{AdvertisingAddress} -> {ScanningAddress}'
+                print(ScanningAddress)
+            if connection not in AuxList:
+                AuxList.append(connection)
+    MainWindow.FindElement('ConnectionsListBox').Update(values=AuxList)
+
+def PopulatePacketList(capture_dict):
+    """ Function that takes in the capture details and populates the packet list """
+
+    packetlistbox = AddPacketsToList(capture_dict)
+    MainWindow.FindElement('PacketListBox').Update(values=packetlistbox)
+
 def ParseBluetoothPCAP(capture):
     """ Takes in a capture variable from pyshark and seperates the data down into a arrayed dictionary, returning the dictionary when done """
 
@@ -125,9 +183,11 @@ def ParseBluetoothPCAP(capture):
     # Define dictionary of PDU types, so the hex can be converted easily from each packet
     PDU_Type_Dict = {
         '0x00000000': 'ADV_IND',
+        '0x00000001': 'ADV_DIRECT_IND',
         '0x00000002': 'ADV_NONCONN_IND',
         '0x00000003': 'SCAN_REQ',
         '0x00000004': 'SCAN_RSP',
+        '0x00000005': 'CONNECT_REQ',
         '0x00000006': 'ADV_SCAN_IND'
     }
 
@@ -201,7 +261,7 @@ frame_layout_device_list = [
                ]
 
 frame_layout_connections_list = [
-                  [sg.Listbox(connectionslistbox, size=(60, 29))]
+                  [sg.Listbox(connectionslistbox, key='ConnectionsListBox', size=(60, 29))]
                ]
 
 # The layout of the nested side column
@@ -221,7 +281,7 @@ layout = [
 MainWindow = sg.Window('Bluetooth Sniffing Application', layout, icon='icons/bluetooth.ico')
 
 def main():
-    """ Main entry point of the app """
+    """ Main function and the entry function for the application """
 
     # Create cap variable that starts empty, so if the user tries to export a pcap file with no capture loaded yet, it will pop an error popup
     cap = ''
@@ -245,14 +305,18 @@ def main():
             if cap == '':
                 sg.popup('No Live Capture Has Been Completed to Export, Please Run a Live Capture', title='No Capture', keep_on_top=True, icon='icons/bluetooth.ico')
         if event1 == 'Import PCAP':
-            capture_dictionary = ImportPCAP()
-            PopulateUniqueDevicesList(capture_dictionary)
+            capture_dictionary = ImportPCAP() # Start importing function
+            if capture_dictionary != None: # Check if the returned capture is not empty, if it has data assigned, continue with the processes.
+                PopulatePacketList(capture_dictionary)
+                PopulateUniqueDevicesList(capture_dictionary) # Populate the unique devices list
+                PopulateUniqueConnectionsList(capture_dictionary)
         if event1 == 'PacketListBox' and not PacketDetailsWindowActive:
             packet_number = re.search(r'\d+', values1["PacketListBox"][0]).group(0)
+        
             PacketDetailsWindowActive = True
-            #MainWindow.Hide()
 
             PacketDetailsPopup(packet_number, capture_dictionary)
+
             PacketDetailsWindowActive = False
 
     MainWindow.close()
