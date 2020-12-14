@@ -160,10 +160,8 @@ def PopulateUniqueConnectionsList(capture_dict):
         if AdvertisingAddress != 'N/A' and ScanningAddress != 'N/A':
             if packet.get("Packet Type") == 'SCAN_REQ':
                 connection = f'{ScanningAddress} -> {AdvertisingAddress}'
-                print(ScanningAddress)
             else:
                 connection = f'{AdvertisingAddress} -> {ScanningAddress}'
-                print(ScanningAddress)
             if connection not in AuxList:
                 AuxList.append(connection)
     MainWindow.FindElement('ConnectionsListBox').Update(values=AuxList)
