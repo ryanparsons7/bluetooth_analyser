@@ -44,14 +44,17 @@ def OpenAboutPopup():
 
 def CheckForBLE(capture):
     """ Checks the capture variable for any BTLE headers, returns true or false. """
-
-    for i in capture:
-        try:
-            if i.btle:
-                return True
-        except:
-            pass
-    return False
+    try:
+        for i in capture:
+            try:
+                if i.btle:
+                    return True
+            except:
+                pass
+        return False
+    except Exception as e:
+        sg.popup_error(f'ERROR: {e}')
+        exit()
 
 def AddPacketsToList(parsed_dictionary):
     """ Creates the basic list shown on the main application window. """
@@ -133,7 +136,7 @@ def ExpandedPacketDetails(detail):
             'ADV_IND': 'Indicates the advertising device is connectable and is using undirected advertising.',
             'ADV_DIRECT_IND': 'Indicates the advertising device is connectable by only one specific central device and is using directed advertising.',
             'ADV_NONCONN_IND': 'Indicates a non-connectable advertising device, that also cannot respond to scanning requests for more info.',
-            'SCAN_REQ': 'A scan request from a central device to a advertising device, requesting additional infromation about the device.',
+            'SCAN_REQ': 'A scan request from a central device to a advertising device, requesting additional information about the device.',
             'SCAN_RSP': 'A response to the scan request (SCAN_REQ), containing additional information about the peripheral device.',
             'CONNECT_REQ': 'A connection request from a central device to a peripheral device.',
             'ADV_SCAN_IND': 'Indicates a non-connectable advertising device, that however, can respond to scanning requests for more info.'
@@ -183,7 +186,7 @@ def PopulatePacketList(capture_dict):
 
 def ParseBluetoothPCAP(capture):
     """ Takes in a capture variable from pyshark and seperates the data down into a arrayed dictionary, returning the dictionary when done """
-    CompanyFromID(1)
+    #CompanyFromID(1)
     parsed_dict = [] # Creat an empty list to fill and return at the end of the function
     packet_number = 1 # Set the first packet number as 1, this will be incremented with each packet
 
