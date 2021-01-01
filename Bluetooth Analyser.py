@@ -44,7 +44,6 @@ def GetFileLocation():
     try:
         imported_pcap_location = ''
         imported_pcap_location = sg.popup_get_file('Select PCAP File', file_types=(("PCAPNG Files", "*.pcapng"),("PCAP Files", "*.pcap")), icon='icons/bluetooth.ico', keep_on_top=True)
-        print(imported_pcap_location)
         if imported_pcap_location == '':
             sg.popup_error('No PCAP File Selected', title=None, icon='icons/bluetooth.ico')
             return(imported_pcap_location)
@@ -104,11 +103,6 @@ def ImportPCAP():
         return
     return(capture_dict)
 
-def CompanyFromID(id):
-    with open('data/companies.json') as f:
-        data = json.load(f)
-    print(data)
-
 def PacketDetailsPopup(packet_number, capture_dict_array):
     """ Takes in a packet number and capure information in the form of a array of dictionaries when the user clicks on a specific packet.
         This will then create a window containing the information regarding that packet """
@@ -125,8 +119,6 @@ def PacketDetailsPopup(packet_number, capture_dict_array):
         f'CRC: {capture_dict_array[packet_number].get("CRC")}',
         f'Company: {capture_dict_array[packet_number].get("Company")}',
         f'Advertising Data: {capture_dict_array[packet_number].get("Advertising Data")}']
-
-    print(capture_dict_array[packet_number].get("Advertising Data"))
 
     layout2 = [[sg.Listbox(packet_detail_list, size=(60, 29), enable_events=True, font="TkFixedFont", key='PacketDetails')],       # note must create a layout from scratch every time. No reuse
                 [sg.Button('Exit')]]
