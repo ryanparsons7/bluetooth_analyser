@@ -11,8 +11,13 @@ import PySimpleGUI as sg # Importing PySimpleGUI Module for GUI Functionality
 import pyshark # Importing pyshark for Wireshark functionality needed for parsing data
 import sys # Importing sys module for system based functions
 import datetime # Importing datetime module for date and time functions
-import re
-import csv
+import re # Importing re module for regex usage
+import csv # Importing csv module for 
+import subprocess # Importing subprocess module for command line usage
+import pathlib
+import time
+import os
+import shutil
 
 sg.theme('BlueMono')	# Theme choice, blue because of Bluetooth!
 
@@ -86,11 +91,14 @@ def AddPacketsToList(parsed_dictionary):
             )
     return packet_list
 
-def ImportPCAP():
+def ImportPCAP(*pcap_file_location):
     """ Opens the importing popup window for the user, allowing them to select a file. Once a file is selected, it is checked to see if it has the correct
         file extensions and if it contains any BTLE headers. Will return the file location of a working file that was selected. """
 
-    pcap_file_location = GetFileLocation() # Get the file location that the user selects
+    if  pcap_file_location == ():
+        pcap_file_location = GetFileLocation() # Get the file location that the user selects
+    else:
+        pcap_file_location = pcap_file_location[0]
     if not (pcap_file_location == None or pcap_file_location == ''):
         cap = pyshark.FileCapture(pcap_file_location, use_json=True) # Get the capture from the file into a variable and use JSON format instead
         if CheckForBLE(cap):
@@ -101,7 +109,38 @@ def ImportPCAP():
     else:
         print('No file was selected, Stopped importing')
         return
+    if capture_dict != None: # Check if the returned capture is not empty, if it has data assigned, continue with the processes.
+                PopulatePacketList(capture_dict)
+                PopulateUniqueDevicesList(capture_dict) # Populate the unique devices list
+                PopulateUniqueConnectionsList(capture_dict)
     return(capture_dict)
+
+def createDir(folder_path):
+    '''Function that takes in a relative or absolute path, checks if that
+    path exists, and if it does, it will delete it's contents. If the directory
+    doesn\'t exist, it will create it'''
+    # Try block, if permission errors occur, the error details will be printed
+    try:
+        # IF the path exists, run the code that will delete it's contents
+        if os.path.exists(folder_path):
+            filelist = [f for f in os.listdir(folder_path)]
+            for f in filelist:
+                os.remove(os.path.join(folder_path, f))
+            print(f'Output data folder already exists, '
+                  f'deleted the contents of folder: {folder_path}')
+        # Else, if the path doesn't exist, just make the directory
+        else:
+            os.mkdir(folder_path)
+            print(f'Output data folder doesn\'t exist, '
+                  f'created folder: {folder_path}\n')
+    # If a permission error occurs, recommend solution and quit the script
+    except PermissionError as err:
+        print(f'Exception Occured: {err}\nTry running the script elevated')
+        quit()
+    # If any other exceptions occur, print the error details and quit
+    except Exception as err:
+        print(f'Exception Occured: {err}')
+        quit()
 
 def PacketDetailsPopup(packet_number, capture_dict_array):
     """ Takes in a packet number and capure information in the form of a array of dictionaries when the user clicks on a specific packet.
@@ -305,6 +344,43 @@ def ParseBluetoothPCAP(capture):
         parsed_dict.append(packet_information) # Append the dictionary to the array
     return parsed_dict
 
+def LiveCapture():
+    live_capture_layout = [
+            [sg.Text('Please select your parameters and click the Capture button to start')],
+            [sg.Text('Capture time in seconds'), sg.InputText()],
+            [sg.Button('Capture'), sg.Button('Exit')]
+    ]
+
+    CaptureWindow = sg.Window('Live Capture', live_capture_layout, modal=True, icon='icons/bluetooth.ico')
+    while True:
+        event2, values2 = CaptureWindow.read()
+        if event2 == sg.WIN_CLOSED or event2 == 'Exit':
+            CaptureWindow.close()
+            break
+        if event2 == 'Capture':
+            if not values2[0] == '':
+                current_folder = pathlib.Path(__file__).parent.absolute()
+                timer = float(values2[0])
+                wireshark_proc = subprocess.Popen(f'C:\\Program Files\\Wireshark\\Wireshark.exe -i COM3 -k -w "{current_folder}\\temp\\temp_capture.pcapng" -a duration:{timer}')
+                time.sleep(timer + 10)
+                wireshark_proc.kill()
+                CaptureWindow.close()
+                ImportPCAP(f'{current_folder}\\temp\\temp_capture.pcapng')
+                break
+
+def ExportPCAP():
+    if os.path.isfile('temp/temp_capture.pcapng'):
+        file_save = sg.popup_get_file('Save PCAP File', save_as=True, icon='icons/bluetooth.ico')
+        if not file_save.endswith('.pcapng'):
+            file_save = "".join((file_save, '.pcapng'))
+        shutil.copy('temp/temp_capture.pcapng', file_save)
+        if os.path.isfile(file_save):
+            sg.popup_ok(f'Capture has been saved to {file_save}')
+        else:
+            sg.popup_error('Capture failed to save, try again.')
+    else:
+        sg.popup_error('No Live Capture Temporary File Is Available, Please Run a Live Capture', title='Error in Exporting', icon='icons/bluetooth.ico')
+
 packetlistbox = []
 devicelistbox = []
 connectionslistbox = []
@@ -341,10 +417,9 @@ MainWindow = sg.Window('Bluetooth Sniffing Application', layout, icon='icons/blu
 def main():
     """ Main function and the entry function for the application """
 
-    # Create cap variable that starts empty, so if the user tries to export a pcap file with no capture loaded yet, it will pop an error popup
-    cap = ''
-
     PacketDetailsWindowActive = False
+
+    createDir('temp')
 
     # The event loop
     while True:
@@ -355,27 +430,23 @@ def main():
         if event1 == 'About':
             OpenAboutPopup()
         if event1 == 'Live Capture':
-            #capture = pyshark.LiveCapture(interface='COM4')
-            #capture.sniff(timeout=10)
-            #print(capture)
-            print('Live Capture TBD')
-        if event1 == 'Export PCAP':
-            if cap == '':
-                sg.popup('No Live Capture Has Been Completed to Export, Please Run a Live Capture', title='No Capture', keep_on_top=True, icon='icons/bluetooth.ico')
+            LiveCapture()
         if event1 == 'Import PCAP':
             capture_dictionary = ImportPCAP() # Start importing function
-            if capture_dictionary != None: # Check if the returned capture is not empty, if it has data assigned, continue with the processes.
-                PopulatePacketList(capture_dictionary)
-                PopulateUniqueDevicesList(capture_dictionary) # Populate the unique devices list
-                PopulateUniqueConnectionsList(capture_dictionary)
+        if event1 == 'Export PCAP':
+            ExportPCAP() # Start exporting function
         if event1 == 'PacketListBox' and not PacketDetailsWindowActive:
-            packet_number = re.search(r'\d+', values1["PacketListBox"][0]).group(0)
-        
-            PacketDetailsWindowActive = True
+            try:
+                packet_number = re.search(r'\d+', values1["PacketListBox"][0]).group(0)
+            
+                PacketDetailsWindowActive = True
 
-            PacketDetailsPopup(packet_number, capture_dictionary)
+                PacketDetailsPopup(packet_number, capture_dictionary)
 
-            PacketDetailsWindowActive = False
+                PacketDetailsWindowActive = False
+            except IndexError:
+                print('User clicks on the empty packet list.')
+                pass
 
     MainWindow.close()
 
