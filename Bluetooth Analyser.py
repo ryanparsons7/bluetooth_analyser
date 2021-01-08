@@ -326,7 +326,10 @@ def ParseBluetoothPCAP(capture):
         # Try to fill in the Company ID , if an exception occurs, fill in as N/A
         try:
             if PDU_Type_Dict[packet.btle.advertising_header_tree.pdu_type] == 'ADV_IND':
-                packet_information['Company'] = company_dict[packet.btle.advertising_data.entry[1].company_id]
+                try:
+                    packet_information['Company'] = company_dict[packet.btle.advertising_data.entry[1].company_id]
+                except:
+                    packet_information['Company'] = company_dict[packet.btle.advertising_data.entry[2].company_id]
             else:
                 packet_information['Company'] = company_dict[packet.btle.advertising_data.entry.company_id]
         except Exception as e:
