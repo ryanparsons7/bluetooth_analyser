@@ -119,6 +119,7 @@ def createDir(folder_path):
     '''Function that takes in a relative or absolute path, checks if that
     path exists, and if it does, it will delete it's contents. If the directory
     doesn\'t exist, it will create it'''
+
     # Try block, if permission errors occur, the error details will be printed
     try:
         # IF the path exists, run the code that will delete it's contents
@@ -348,6 +349,8 @@ def ParseBluetoothPCAP(capture):
     return parsed_dict
 
 def LiveCapture():
+    """ When the function is ran, a window is displayed to the user that allows them to configure live capture parameters and start a live capture """
+    
     live_capture_layout = [
             [sg.Text('Please select your parameters and click the Capture button to start')],
             [sg.Text('Capture time in seconds'), sg.InputText()],
@@ -364,14 +367,29 @@ def LiveCapture():
             if not values2[0] == '':
                 current_folder = pathlib.Path(__file__).parent.absolute()
                 timer = float(values2[0])
-                wireshark_proc = subprocess.Popen(f'C:\\Program Files\\Wireshark\\Wireshark.exe -i COM3 -k -w "{current_folder}\\temp\\temp_capture.pcapng" -a duration:{timer}')
-                time.sleep(timer + 10)
-                wireshark_proc.kill()
+                arguments = f'-i COM3 -k -w "{current_folder}\\temp\\temp_capture.pcapng" -a duration:{timer}'
+                if sys.platform.startswith('win32'):
+                    print('Windows OS Being Used')
+                    install_location = 'C:\\Program Files\\Wireshark\\Wireshark.exe'
+                    if not os.path.isfile(install_location):
+                        sg.popup_error('The Wireshark Executable is not located at the default location. Please navigate and select the "Wireshark.exe".', icon='icons/bluetooth.ico')
+                        install_location = sg.popup_get_file('Choose Wireshark.exe', icon='icons/bluetooth.ico')
+                    wireshark_proc = subprocess.Popen(f'{install_location} {arguments}')
+                    time.sleep(timer + 10)
+                    wireshark_proc.kill()
+                elif sys.platform.startswith('linux'):
+                    print('Linux')
                 CaptureWindow.close()
-                ImportPCAP(f'{current_folder}\\temp\\temp_capture.pcapng')
+                temp_file = f'{current_folder}\\temp\\temp_capture.pcapng'
+                if not os.path.isfile(temp_file):
+                    sg.popup_error('The capture file from Wireshark was not created, this may be due to the sniffer not being connected properly. Please read any error messages that appear in the Wireshark application when it opens.', icon='icons/bluetooth.ico')
+                    break
+                ImportPCAP(temp_file)
                 break
 
 def ExportPCAP():
+    """ Checks if the temporary capture file exist and if it does, it will copy it to the file that the user selects """
+    
     if os.path.isfile('temp/temp_capture.pcapng'):
         file_save = sg.popup_get_file('Save PCAP File', save_as=True, icon='icons/bluetooth.ico')
         if not file_save.endswith('.pcapng'):
