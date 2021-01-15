@@ -14,52 +14,47 @@ import datetime # Importing datetime module for date and time functions
 import re # Importing re module for regex usage
 import csv # Importing csv module for 
 import subprocess # Importing subprocess module for command line usage
-import pathlib
-import time
-import os
-import shutil
+import pathlib # Importing pathlib that is used to find paths
+import time # Importing time module for time based functions
+import os # Importing OS module for os functions
+import shutil # Importing shutil module for shell utitilies
 
 sg.theme('BlueMono')	# Theme choice, blue because of Bluetooth!
 
 def readKeyValues(inputCsvFile):
     """ A function that takes in a csv file and creates key value pair dictionary from the first and second columns. Code from https://ayeshalshukri.co.uk/category/dev/python-script-to-extract-key-value-pairs-from-csv-file/ """
 	#input file reader
-    infile = open(inputCsvFile, "r", encoding="utf8")
-    read = csv.reader(infile)
+    infile = open(inputCsvFile, "r", encoding="utf8") # Open the spreadsheet file in read only mode and with encoding of utf8
+    read = csv.reader(infile) # Read file variable
 	
-    returnDictionary = {}
-    returnList = []
+    returnDictionary = {} # Empty dictionary to store future data
     #for each row
-    for row in read:
-    	key   = row[0]
-    	value = row[1]
+    for row in read: # For every row in the spreadsheet
+    	key   = row[0] # The key is the first row
+    	value = row[1] # The value is the second row
     
-    	#Add to dictionary 
-    	#note will overwrite and store single occurrences
-    	returnDictionary[key] = value
+    	returnDictionary[key] = value # Now add the key value pair to the dictionary
     
-    	#Add to list (note, will store multiple occurrences)
-    	returnList.append([key,value])
-    return(returnDictionary)
+    return(returnDictionary) # Return the finished dictionary
 
 def GetFileLocation():
     """ Opens the importing popup window for the user, allowing them to select a file. Once a file is selected, it is checked to see if it has the correct
         file extensions. Will return the file location of a working file that was selected. """
 
-    try:
-        imported_pcap_location = ''
-        imported_pcap_location = sg.popup_get_file('Select PCAP File', file_types=(("PCAPNG Files", "*.pcapng"),("PCAP Files", "*.pcap")), icon='icons/bluetooth.ico', keep_on_top=True)
-        if imported_pcap_location == '':
-            sg.popup_error('No PCAP File Selected', title=None, icon='icons/bluetooth.ico')
-            return(imported_pcap_location)
-        elif not imported_pcap_location.endswith(('.pcapng','.pcap')):
-            sg.popup_error('The file selected is not a PCAP file.', title=None, icon='icons/bluetooth.ico')
-            return(imported_pcap_location)
-        elif not imported_pcap_location == '':
-            print(f'Returned the pcap file location as {imported_pcap_location}')
-            return(imported_pcap_location)
+    try: # Try the following code, as errors could potentially occur
+        imported_pcap_location = '' # Set an empty string for the location initially
+        imported_pcap_location = sg.popup_get_file('Select PCAP File', file_types=(("PCAPNG Files", "*.pcapng"),("PCAP Files", "*.pcap")), icon='icons/bluetooth.ico', keep_on_top=True) # Get the location of the PCAP file from the user
+        if imported_pcap_location == '': # If the location give is empty
+            sg.popup_error('No PCAP File Selected', title=None, icon='icons/bluetooth.ico') # tell the user no file was selected
+            return(imported_pcap_location) # And return the empty string
+        elif not imported_pcap_location.endswith(('.pcapng','.pcap')): # If the file location string is not empty but doesn't end in the selected extensions
+            sg.popup_error('The file selected is not a PCAP file.', title=None, icon='icons/bluetooth.ico') # Tell the user the file extension is not correct
+            return(imported_pcap_location) # And return the empty string
+        elif not imported_pcap_location == '': # And finally, if the previous checks don't trigger
+            print(f'Returned the pcap file location as {imported_pcap_location}') # Print to the log the location of the file
+            return(imported_pcap_location) # And return the file location
     except:
-        print("Unexpected error:", sys.exc_info()[0])
+        print("Unexpected error:", sys.exc_info()[0]) # If any errors occur, print the error to the log and continue
 
 def OpenAboutPopup():
     """ Shows the about popup window, showing information about the application. """
@@ -364,7 +359,7 @@ def LiveCapture():
             CaptureWindow.close()
             break
         if event2 == 'Capture':
-            if not values2[0] == '':
+            if not values2[0] == '' and values2[0].isnumeric():
                 current_folder = pathlib.Path(__file__).parent.absolute()
                 timer = float(values2[0])
                 arguments = f'-i COM3 -k -w "{current_folder}\\temp\\temp_capture.pcapng" -a duration:{timer}'
@@ -374,6 +369,11 @@ def LiveCapture():
                     if not os.path.isfile(install_location):
                         sg.popup_error('The Wireshark Executable is not located at the default location. Please navigate and select the "Wireshark.exe".', icon='icons/bluetooth.ico')
                         install_location = sg.popup_get_file('Choose Wireshark.exe', icon='icons/bluetooth.ico')
+                    ext_cap_folder = install_location.removesuffix('Wireshark.exe') + 'extcap'
+                    if not os.path.isdir(f'{ext_cap_folder}\\SnifferAPI'):
+                        sg.popup_error('The Sniffer API is not installed correctly, please follow the installation guide.".', icon='icons/bluetooth.ico')
+                        CaptureWindow.close()
+                        break
                     wireshark_proc = subprocess.Popen(f'{install_location} {arguments}')
                     time.sleep(timer + 10)
                     wireshark_proc.kill()
@@ -386,6 +386,8 @@ def LiveCapture():
                     break
                 ImportPCAP(temp_file)
                 break
+            else:
+                sg.popup_error('Please enter a number.', icon='icons/bluetooth.ico')
 
 def ExportPCAP():
     """ Checks if the temporary capture file exist and if it does, it will copy it to the file that the user selects """
