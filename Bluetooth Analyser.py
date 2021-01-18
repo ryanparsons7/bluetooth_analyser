@@ -378,7 +378,10 @@ def LiveCapture():
                     time.sleep(timer + 10)
                     wireshark_proc.kill()
                 elif sys.platform.startswith('linux'):
-                    print('Linux')
+                    print('Linux OS Being Used')
+                    wireshark_proc = subprocess.Popen(f'wireshark {arguments}')
+                    time.sleep(timer + 10)
+                    wireshark_proc.kill()
                 CaptureWindow.close()
                 temp_file = f'{current_folder}\\temp\\temp_capture.pcapng'
                 if not os.path.isfile(temp_file):
