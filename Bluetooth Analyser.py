@@ -410,15 +410,15 @@ connectionslistbox = []
 capture_dict = {}
 
 frame_layout_all_packets = [
-                  [sg.Listbox(packetlistbox, key='PacketListBox', size=(120, 60), enable_events=True, font="TkFixedFont")]
+                  [sg.Listbox(packetlistbox, key='PacketListBox', size=(120, 40), enable_events=True, font="TkFixedFont")]
                ]
 
 frame_layout_device_list = [
-                  [sg.Listbox(devicelistbox, key='DeviceListBox', size=(60, 29))]
+                  [sg.Listbox(devicelistbox, key='DeviceListBox', size=(60, 19))]
                ]
 
 frame_layout_connections_list = [
-                  [sg.Listbox(connectionslistbox, key='ConnectionsListBox', size=(60, 29))]
+                  [sg.Listbox(connectionslistbox, key='ConnectionsListBox', size=(60, 19))]
                ]
 
 # The layout of the nested side column

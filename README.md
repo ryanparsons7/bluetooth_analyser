@@ -17,7 +17,7 @@ This repository is for my Honours Project at Edinburgh Napier University for Cyb
 # Instructions
 ## Packet Analysis
 - Install Wireshark + TShark.
-- Run "Bluetooth Analyser.py" with Python 3 ("py Bluetooth Analyser.py" in Powershell or Linux shell)
+- Run "Bluetooth Analyser.py" with Python 3 ("py Bluetooth Analyser.py" in Powershell or "python3 Bluetooth Analyser.py" in the Linux shell)
 - Press "Import PCAP" and select the file you wish to import.
 - Click various packets to discover more information regarding their data and structure.
 
