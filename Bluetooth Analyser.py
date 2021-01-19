@@ -362,9 +362,9 @@ def LiveCapture():
             if not values2[0] == '' and values2[0].isnumeric():
                 current_folder = pathlib.Path(__file__).parent.absolute()
                 timer = float(values2[0])
-                arguments = f'-i COM3 -k -w "{current_folder}\\temp\\temp_capture.pcapng" -a duration:{timer}'
                 if sys.platform.startswith('win32'):
                     print('Windows OS Being Used')
+                    arguments = f'-i COM3 -k -w "{current_folder}\\temp\\temp_capture.pcapng" -a duration:{timer}'
                     install_location = 'C:\\Program Files\\Wireshark\\Wireshark.exe'
                     if not os.path.isfile(install_location):
                         sg.popup_error('The Wireshark Executable is not located at the default location. Please navigate and select the "Wireshark.exe".', icon='icons/bluetooth.ico')
@@ -379,9 +379,9 @@ def LiveCapture():
                     wireshark_proc.kill()
                 elif sys.platform.startswith('linux'):
                     print('Linux OS Being Used')
-                    wireshark_proc = subprocess.Popen(f'wireshark {arguments}')
+                    wireshark_proc = subprocess.Popen(['sudo', 'wireshark', '-i COM3', '-k', f'-w {current_folder}/temp/temp_capture.pcapng', f'-aduration:{int(timer)}'])
                     time.sleep(timer + 10)
-                    wireshark_proc.kill()
+                    sg.popup_ok(f'Wireshark should have completed capturing, please close Wireshark and then press "OK".')
                 CaptureWindow.close()
                 temp_file = f'{current_folder}\\temp\\temp_capture.pcapng'
                 if not os.path.isfile(temp_file):

@@ -4,10 +4,10 @@ This repository is for my Honours Project at Edinburgh Napier University for Cyb
 
 ## Basic Requirements
 - Windows 10 or Linux System.
-- Python 3 Installed.
-- Wireshark Installed.
-- TShark Installed. (included with Wireshark)
-- Various Python Modules Installed:
+- Python 3 Installed. (https://www.python.org/downloads/)
+- Wireshark Installed. (https://www.wireshark.org/download.html for Windows or "apt-get install Wireshark" for Linux. Allow non-superusers to capture from devices when installing on Linux)
+- TShark Installed. (Included with Wireshark on Windows or "apt-get install tshark" for Linux)
+- Various Python Modules Installed (pip3 install module_name):
     - pyserial
     - PySimpleGUI
     - pyshark
