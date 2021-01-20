@@ -195,8 +195,11 @@ def ExpandedPacketDetails(detail):
     detail_string = (re.search(r'.*: ', detail).group(0)[:-2]) # Extract the packet detail string, so it can be used to get the correct response from the dictionary.
     # If statement detecting if packet type was selected. If so, go through specific reponse for packet types. If it was not, continue with the other detail responses.
     if detail_string == 'Packet Type':
-        type_string = (re.search(r':.*', detail).group(0)[2:]) # Get the packet type.
-        sg.popup(expanded_packet_type_detail_list[type_string], title=type_string, keep_on_top=True, icon='icons/bluetooth.ico') # Popup showing packet type information.
+        try:
+            type_string = (re.search(r':.*', detail).group(0)[2:]) # Get the packet type.
+            sg.popup(expanded_packet_type_detail_list[type_string], title=type_string, keep_on_top=True, icon='icons/bluetooth.ico') # Popup showing packet type information.
+        except KeyError:
+            sg.popup_error('The packet type was not found within the database.', icon='icons/bluetooth.ico')
     elif detail_string == 'Advertising Data':
         AdvertisingDataExpandedInfoPopup(detail)
     else:
@@ -271,6 +274,9 @@ def ParseBluetoothPCAP(capture):
         
         # Filled in the packet number, no exception needed
         packet_information['Packet Number'] = packet_number
+        
+        if packet_number == 246:
+            print(packet)
 
         # Try to fill in the advertising address, if an exception occurs, fill in as N/A
         try:
