@@ -3,10 +3,10 @@
 This repository is for my Honours Project at Edinburgh Napier University for Cybersecurity and Forensics.
 
 ## Basic Requirements
-- Windows 10 or Linux System.
+- Windows 10.
 - Python 3 Installed. (https://www.python.org/downloads/)
-- Wireshark Installed. (https://www.wireshark.org/download.html for Windows or "apt-get install Wireshark" for Linux. Allow non-superusers to capture from devices when installing on Linux)
-- TShark Installed. (Included with Wireshark on Windows or "apt-get install tshark" for Linux)
+- Wireshark Installed. (https://www.wireshark.org/download.html)
+- TShark Installed. (Included with Wireshark on Windows)
 - Various Python Modules Installed (pip3 install module_name):
     - pyserial
     - PySimpleGUI
@@ -17,7 +17,7 @@ This repository is for my Honours Project at Edinburgh Napier University for Cyb
 # Instructions
 ## Packet Analysis
 - Install Wireshark + TShark.
-- Run "Bluetooth Analyser.py" with Python 3 ("py Bluetooth Analyser.py" in Powershell or "python3 Bluetooth Analyser.py" in the Linux shell)
+- Run "Bluetooth Analyser.py" with Python 3 ("py Bluetooth Analyser.py" in Powershell)
 - Press "Import PCAP" and select the file you wish to import.
 - Click various packets to discover more information regarding their data and structure.
 

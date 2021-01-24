@@ -18,6 +18,12 @@ import pathlib # Importing pathlib that is used to find paths
 import time # Importing time module for time based functions
 import os # Importing OS module for os functions
 import shutil # Importing shutil module for shell utitilies
+import pandas as pd # Importing pandas for graphs
+import numpy as np # Importing numpy for graphs
+import networkx as nx # Importing networkx for graphs
+import matplotlib.pyplot as plt # Importing pyplot for graphs
+from collections import Counter
+
 
 sg.theme('BlueMono')	# Theme choice, blue because of Bluetooth!
 
@@ -59,32 +65,32 @@ def GetFileLocation():
 def OpenAboutPopup():
     """ Shows the about popup window, showing information about the application. """
 
-    about_popup = f'Bluetooth Packet Analyser Created by Ryan Parsons\nNapier University, Cybersecurity and Forensics Honours Project'
-    sg.popup(about_popup, title='About', keep_on_top=True, icon='icons/bluetooth.ico')
+    about_popup = f'Bluetooth Packet Analyser Created by Ryan Parsons\nNapier University, Cybersecurity and Forensics Honours Project' # Text to show on popup
+    sg.popup(about_popup, title='About', keep_on_top=True, icon='icons/bluetooth.ico') # Display about popup
 
 def CheckForBLE(capture):
     """ Checks the capture variable for any BTLE headers, returns true or false. """
-    try:
-        for i in capture:
+    try: # Try the following code
+        for i in capture: # For every packet in the capture
             try:
-                if i.btle:
-                    return True
+                if i.btle: # If the packet contains a BTLE section
+                    return True # Return True, indicating that the capture has at least 1 BLE packet
             except:
-                pass
+                pass # If the check fails due to error, go to the next packet
         return False
-    except Exception as e:
+    except Exception as e: # If some big error occurs with reading the capture, produce a popup showing the error
         sg.popup_error(f'ERROR: {e}')
-        exit()
+        exit() # Exit app
 
 def AddPacketsToList(parsed_dictionary):
     """ Creates the basic list shown on the main application window. """
 
-    packet_list = []
-    for packet in parsed_dictionary:
+    packet_list = [] # Create empty array for the packets
+    for packet in parsed_dictionary: # For every packet in the parsed dictionary
         packet_list.append(
-            f'{"Packet #" + str(packet["Packet Number"]):<13} - {"Advertising Address: " + packet["Advertising Address"]:<38} - Packet Type: {packet["Packet Type"]}'
+            f'{"Packet #" + str(packet["Packet Number"]):<13} - {"Adv Address: " + packet["Advertising Address"]:<32} - {"Scan Address: " + packet["Scanning Address"]:<32} - Packet Type: {packet["Packet Type"]}' # Append the brief summary for that packet to be displayed on the main window
             )
-    return packet_list
+    return packet_list # Return the packet list when done with all packets
 
 def ImportPCAP(*pcap_file_location):
     """ Opens the importing popup window for the user, allowing them to select a file. Once a file is selected, it is checked to see if it has the correct
@@ -368,26 +374,20 @@ def LiveCapture():
             if not values2[0] == '' and values2[0].isnumeric():
                 current_folder = pathlib.Path(__file__).parent.absolute()
                 timer = float(values2[0])
-                if sys.platform.startswith('win32'):
-                    print('Windows OS Being Used')
-                    arguments = f'-i COM3 -k -w "{current_folder}\\temp\\temp_capture.pcapng" -a duration:{timer}'
-                    install_location = 'C:\\Program Files\\Wireshark\\Wireshark.exe'
-                    if not os.path.isfile(install_location):
-                        sg.popup_error('The Wireshark Executable is not located at the default location. Please navigate and select the "Wireshark.exe".', icon='icons/bluetooth.ico')
-                        install_location = sg.popup_get_file('Choose Wireshark.exe', icon='icons/bluetooth.ico')
-                    ext_cap_folder = install_location.removesuffix('Wireshark.exe') + 'extcap'
-                    if not os.path.isdir(f'{ext_cap_folder}\\SnifferAPI'):
-                        sg.popup_error('The Sniffer API is not installed correctly, please follow the installation guide.".', icon='icons/bluetooth.ico')
-                        CaptureWindow.close()
-                        break
-                    wireshark_proc = subprocess.Popen(f'{install_location} {arguments}')
-                    time.sleep(timer + 10)
-                    wireshark_proc.kill()
-                elif sys.platform.startswith('linux'):
-                    print('Linux OS Being Used')
-                    wireshark_proc = subprocess.Popen(['sudo', 'wireshark', '-i COM3', '-k', f'-w {current_folder}/temp/temp_capture.pcapng', f'-aduration:{int(timer)}'])
-                    time.sleep(timer + 10)
-                    sg.popup_ok(f'Wireshark should have completed capturing, please close Wireshark and then press "OK".')
+                print('Windows OS Being Used')
+                arguments = f'-i COM3 -k -w "{current_folder}\\temp\\temp_capture.pcapng" -a duration:{timer}'
+                install_location = 'C:\\Program Files\\Wireshark\\Wireshark.exe'
+                if not os.path.isfile(install_location):
+                    sg.popup_error('The Wireshark Executable is not located at the default location. Please navigate and select the "Wireshark.exe".', icon='icons/bluetooth.ico')
+                    install_location = sg.popup_get_file('Choose Wireshark.exe', icon='icons/bluetooth.ico')
+                ext_cap_folder = install_location.removesuffix('Wireshark.exe') + 'extcap'
+                if not os.path.isdir(f'{ext_cap_folder}\\SnifferAPI'):
+                    sg.popup_error('The Sniffer API is not installed correctly, please follow the installation guide.".', icon='icons/bluetooth.ico')
+                    CaptureWindow.close()
+                    break
+                wireshark_proc = subprocess.Popen(f'{install_location} {arguments}')
+                time.sleep(timer + 10)
+                wireshark_proc.kill()
                 CaptureWindow.close()
                 temp_file = f'{current_folder}\\temp\\temp_capture.pcapng'
                 if not os.path.isfile(temp_file):
@@ -401,31 +401,64 @@ def LiveCapture():
 def ExportPCAP():
     """ Checks if the temporary capture file exist and if it does, it will copy it to the file that the user selects """
     
-    if os.path.isfile('temp/temp_capture.pcapng'):
-        file_save = sg.popup_get_file('Save PCAP File', save_as=True, icon='icons/bluetooth.ico')
-        if not file_save.endswith('.pcapng'):
-            file_save = "".join((file_save, '.pcapng'))
-        shutil.copy('temp/temp_capture.pcapng', file_save)
-        if os.path.isfile(file_save):
-            sg.popup_ok(f'Capture has been saved to {file_save}')
-        else:
-            sg.popup_error('Capture failed to save, try again.')
+    if os.path.isfile('temp/temp_capture.pcapng'): # If the temporary capture file exists
+        file_save = sg.popup_get_file('Save PCAP File', save_as=True, icon='icons/bluetooth.ico') # Ask the user where they wish to save the file to
+        if not file_save.endswith('.pcapng'): # If the file location provided doesn't end in .pcapng
+            file_save = "".join((file_save, '.pcapng')) # Add it to the end of the file name
+        shutil.copy('temp/temp_capture.pcapng', file_save) # Copy the temp file to a new file called what was determined previously
+        if os.path.isfile(file_save): # Check if the file has been copied
+            sg.popup_ok(f'Capture has been saved to {file_save}') # If the file has been copied successfully, tell the user where it was saved
+        else: # If the temp file doesn't exist
+            sg.popup_error('Capture failed to save, try again.') #  Tell the user the capture didn't get saved
     else:
         sg.popup_error('No Live Capture Temporary File Is Available, Please Run a Live Capture', title='Error in Exporting', icon='icons/bluetooth.ico')
 
+def NetworkMap(capture_dict):
+    """ Creates a map of the network from the capture file """
+    ConnectionList = []
+    for packet in capture_dict:
+        AdvertisingAddress = packet.get("Advertising Address")
+        ScanningAddress = packet.get("Scanning Address")
+        if AdvertisingAddress != 'N/A' and ScanningAddress != 'N/A':
+            if packet.get("Packet Type") == 'SCAN_REQ':
+                connection = (ScanningAddress, AdvertisingAddress)
+            else:
+                connection = (AdvertisingAddress, ScanningAddress)
+            ConnectionList.append(connection)
+    g = nx.DiGraph((x, y, {'weight': v}) for (x, y), v in Counter(ConnectionList).items())
+    # Configure the positions of the nodes, with a desired distance and inter
+    pos = nx.spring_layout(g, k=4, iterations=50)
+    # Define the variables, and where they get their values from
+    labels = nx.get_edge_attributes(g, 'weight')
+    # Draw the edge labels
+    nx.draw_networkx_edge_labels(g, pos, edge_labels=labels,
+                                 font_size=7, label_pos=0.4)
+    # Draw the diagram with the wanted parameters
+    nx.draw(g, pos, with_labels=True, node_size=50, font_size=7,
+            font_color='red', node_color='limegreen', width=1,
+            arrowsize=8)
+    # Display the diagram
+    plt.show()
+
+    
+
+# Declaring empty arrays for various pieces of data
 packetlistbox = []
 devicelistbox = []
 connectionslistbox = []
 capture_dict = {}
 
+# Packet list layout
 frame_layout_all_packets = [
                   [sg.Listbox(packetlistbox, key='PacketListBox', size=(120, 40), enable_events=True, font="TkFixedFont")]
                ]
 
+# Device list layout
 frame_layout_device_list = [
                   [sg.Listbox(devicelistbox, key='DeviceListBox', size=(60, 19))]
                ]
 
+# Connections list layout
 frame_layout_connections_list = [
                   [sg.Listbox(connectionslistbox, key='ConnectionsListBox', size=(60, 19))]
                ]
@@ -436,49 +469,59 @@ side_column_layout = [
     [sg.Frame('Unique Connections', frame_layout_connections_list, font='Any 12', title_color='blue')]
 ]
 
-# The layout of the window.
+# The layout of the main window.
 layout = [
-    [sg.Text('Bluetooth Sniffing Application'), sg.Button('Live Capture'), sg.Button('Import PCAP'), sg.Button('Export PCAP'), sg.Button('About')],
+    [sg.Text('Bluetooth Sniffing Application'), sg.Button('Live Capture'), sg.Button('Import PCAP'), sg.Button('Export PCAP'), sg.Button('Network Map'), sg.Button('About')],
     [sg.Frame('Bluetooth Packets', frame_layout_all_packets, font='Any 12', title_color='blue'),
     sg.Column(side_column_layout, justification='r')]
 ]
 
-# Create the window with a title and a window icon.
-MainWindow = sg.Window('Bluetooth Sniffing Application', layout, icon='icons/bluetooth.ico')
+MainWindow = sg.Window('Bluetooth Sniffing Application', layout, icon='icons/bluetooth.ico') # Main window variable and creation
 
 def main():
     """ Main function and the entry function for the application """
 
-    PacketDetailsWindowActive = False
+    if not sys.platform.startswith('win32'): # If the OS running is not Windows
+        sg.popup_error('Please run this application on Windows!', icon='icons/bluetooth.ico') # Tell the user that they need to run the app on Windows
+        MainWindow.close() # And close out of the app
 
-    createDir('temp')
+    PacketDetailsWindowActive = False # Declare that the packet details window is not being shown as default
+
+    createDir('temp') # Run the function to create a directory called temp
+    
+    capture_dictionary = []
 
     # The event loop
     while True:
         event1, values1 = MainWindow.read()   # Read the event that happened and the values dictionary
-        print(event1, values1)
+        print(event1, values1) # Print any values or events that get produced
         if event1 == sg.WIN_CLOSED or event1 == 'Exit':     # If user closed window with X or if user clicked "Exit" button then exit
             break
-        if event1 == 'About':
+        if event1 == 'About': # If the user clicks on the About button, open the about popup window
             OpenAboutPopup()
-        if event1 == 'Live Capture':
+        if event1 == 'Live Capture': # If the user clicks on Live Capture, start the live capture function
             LiveCapture()
-        if event1 == 'Import PCAP':
-            capture_dictionary = ImportPCAP() # Start importing function
-        if event1 == 'Export PCAP':
-            ExportPCAP() # Start exporting function
-        if event1 == 'PacketListBox' and not PacketDetailsWindowActive:
-            try:
-                packet_number = re.search(r'\d+', values1["PacketListBox"][0]).group(0)
+        if event1 == 'Import PCAP': # If the user clicks on the Import PCAP button, start the ImportPCAP function
+            capture_dictionary = ImportPCAP()
+        if event1 == 'Export PCAP': # If the user clicks on the Export PCAP button, start the ExportPCAP function
+            ExportPCAP()
+        if event1 == 'Network Map': # If the user clicks on the Export PCAP button, start the ExportPCAP function
+            if capture_dictionary != []:
+                NetworkMap(capture_dictionary)
+            else:
+                sg.popup_error('No capture loaded, please import a capture or create a new capture.') # Tell the user no capture is found
+        if event1 == 'PacketListBox' and not PacketDetailsWindowActive: # If the user clicks on any item within the packet list box
+            try: # Try the following code
+                packet_number = re.search(r'\d+', values1["PacketListBox"][0]).group(0) # Get the packet number from the event
             
-                PacketDetailsWindowActive = True
+                PacketDetailsWindowActive = True # Declare the packet details window is going to open
 
-                PacketDetailsPopup(packet_number, capture_dictionary)
+                PacketDetailsPopup(packet_number, capture_dictionary) # Openn the packet details window with the correct info and packet number
 
-                PacketDetailsWindowActive = False
-            except IndexError:
-                print('User clicks on the empty packet list.')
-                pass
+                PacketDetailsWindowActive = False # After the window has closed, declare it is no longer active
+            except IndexError: # If the user clicks on the empty packet list box
+                print('User clicks on the empty packet list.') # Print in the log
+                pass # And just ignore
 
     MainWindow.close()
 
