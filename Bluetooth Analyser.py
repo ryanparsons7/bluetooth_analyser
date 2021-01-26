@@ -440,7 +440,8 @@ def NetworkMap(capture_dict):
     # Display the diagram
     plt.show()
 
-    
+def CrackCapture():
+    """ Creates a map of the network from the capture file """    
 
 # Declaring empty arrays for various pieces of data
 packetlistbox = []
@@ -471,7 +472,7 @@ side_column_layout = [
 
 # The layout of the main window.
 layout = [
-    [sg.Text('Bluetooth Sniffing Application'), sg.Button('Live Capture'), sg.Button('Import PCAP'), sg.Button('Export PCAP'), sg.Button('Network Map'), sg.Button('About')],
+    [sg.Text('Bluetooth Sniffing Application'), sg.Button('Live Capture'), sg.Button('Import PCAP'), sg.Button('Export PCAP'), sg.Button('Network Map'), sg.Button('Crack Capture'), sg.Button('About')],
     [sg.Frame('Bluetooth Packets', frame_layout_all_packets, font='Any 12', title_color='blue'),
     sg.Column(side_column_layout, justification='r')]
 ]
@@ -508,6 +509,11 @@ def main():
         if event1 == 'Network Map': # If the user clicks on the Export PCAP button, start the ExportPCAP function
             if capture_dictionary != []:
                 NetworkMap(capture_dictionary)
+            else:
+                sg.popup_error('No capture loaded, please import a capture or create a new capture.') # Tell the user no capture is found
+        if event1 == 'Crack Capture': # If the user clicks on the Export PCAP button, start the ExportPCAP function
+            if capture_dictionary != []:
+                CrackCapture()
             else:
                 sg.popup_error('No capture loaded, please import a capture or create a new capture.') # Tell the user no capture is found
         if event1 == 'PacketListBox' and not PacketDetailsWindowActive: # If the user clicks on any item within the packet list box
