@@ -111,9 +111,9 @@ def ImportPCAP(*pcap_file_location):
         print('No file was selected, Stopped importing')
         return
     if capture_dict != None: # Check if the returned capture is not empty, if it has data assigned, continue with the processes.
-                PopulatePacketList(capture_dict)
+                PopulatePacketList(capture_dict) # Populate packet list
                 PopulateUniqueDevicesList(capture_dict) # Populate the unique devices list
-                PopulateUniqueConnectionsList(capture_dict)
+                PopulateUniqueConnectionsList(capture_dict) # Populate unique connections list
     return(capture_dict)
 
 def createDir(folder_path):
@@ -232,6 +232,9 @@ def PopulateUniqueDevicesList(capture_dict):
         if ScanningAddress not in AuxList and not ScanningAddress == 'N/A':
             AuxList.append(ScanningAddress)
     MainWindow.FindElement('DeviceListBox').Update(values=AuxList)
+    AddrFilterList = AuxList
+    AddrFilterList.append('Any')
+    MainWindow.FindElement('AddrFilter').Update(values=AddrFilterList)
 
 def PopulateUniqueConnectionsList(capture_dict):
     """ Function that takes in the capture details and populates the unique connections list """
@@ -413,6 +416,22 @@ def ExportPCAP():
     else:
         sg.popup_error('No Live Capture Temporary File Is Available, Please Run a Live Capture', title='Error in Exporting', icon='icons/bluetooth.ico')
 
+def ApplyFilter(capture_dict, type_filter, address_filter):
+    """ Applies filters to the capture dictionary and resubmits it to the displays """
+    new_capture = []
+    for packet in capture_dict:
+        match = True
+        if packet['Packet Type'] != type_filter and type_filter != 'Any':
+            match = False
+        if (packet['Advertising Address'] != address_filter and packet['Scanning Address'] != address_filter) and address_filter != 'Any':
+            match = False
+        if match == True:
+            new_capture.append(packet)
+    
+    if new_capture != None: # Check if the returned capture is not empty, if it has data assigned, continue with the processes.
+        PopulatePacketList(new_capture) # Populate packet list
+    
+
 def NetworkMap(capture_dict):
     """ Creates a map of the network from the capture file """
     ConnectionList = []
@@ -472,7 +491,8 @@ side_column_layout = [
 
 # The layout of the main window.
 layout = [
-    [sg.Text('Bluetooth Sniffing Application'), sg.Button('Live Capture'), sg.Button('Import PCAP'), sg.Button('Export PCAP'), sg.Button('Network Map'), sg.Button('Crack Capture'), sg.Button('About')],
+    [sg.Text('Bluetooth Sniffing Application'), sg.Button('Live Capture'), sg.Button('Import PCAP'), sg.Button('Export PCAP'), sg.Button('Network Map'), sg.Button('About')],
+    [sg.Text('Filter | Packet Type:'), sg.Combo(['Any', 'ADV_IND', 'ADV_DIRECT_IND', 'ADV_NONCONN_IND', 'SCAN_REQ', 'SCAN_RSP', 'CONNECT_REQ', 'ADV_SCAN_IND'], key='TypeFilter', default_value='Any', size=(30, 1)), sg.Text('Address:'), sg.Combo(['Any'], key='AddrFilter', default_value='Any', size=(30, 1)), sg.Button('Apply Filter')],
     [sg.Frame('Bluetooth Packets', frame_layout_all_packets, font='Any 12', title_color='blue'),
     sg.Column(side_column_layout, justification='r')]
 ]
@@ -506,14 +526,14 @@ def main():
             capture_dictionary = ImportPCAP()
         if event1 == 'Export PCAP': # If the user clicks on the Export PCAP button, start the ExportPCAP function
             ExportPCAP()
+        if event1 == 'Apply Filter': # If the user clicks on the Apply Filter button, start the ApplyFilter function
+            if capture_dictionary != []:
+                ApplyFilter(capture_dictionary, values1["TypeFilter"], values1["AddrFilter"])
+            else:
+                sg.popup_error('No capture loaded, please import a capture or create a new capture.') # Tell the user no capture is found
         if event1 == 'Network Map': # If the user clicks on the Export PCAP button, start the ExportPCAP function
             if capture_dictionary != []:
                 NetworkMap(capture_dictionary)
-            else:
-                sg.popup_error('No capture loaded, please import a capture or create a new capture.') # Tell the user no capture is found
-        if event1 == 'Crack Capture': # If the user clicks on the Export PCAP button, start the ExportPCAP function
-            if capture_dictionary != []:
-                CrackCapture()
             else:
                 sg.popup_error('No capture loaded, please import a capture or create a new capture.') # Tell the user no capture is found
         if event1 == 'PacketListBox' and not PacketDetailsWindowActive: # If the user clicks on any item within the packet list box
