@@ -23,7 +23,8 @@ import numpy as np # Importing numpy for graphs
 import networkx as nx # Importing networkx for graphs
 import matplotlib.pyplot as plt # Importing pyplot for graphs
 from collections import Counter
-
+from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
+import plotly.graph_objs as go
 
 sg.theme('BlueMono')	# Theme choice, blue because of Bluetooth!
 
@@ -434,33 +435,102 @@ def ApplyFilter(capture_dict, type_filter, address_filter):
 
 def NetworkMap(capture_dict):
     """ Creates a map of the network from the capture file """
-    ConnectionList = []
+    SourceList = []
+    DestinationList = []
     for packet in capture_dict:
         AdvertisingAddress = packet.get("Advertising Address")
         ScanningAddress = packet.get("Scanning Address")
         if AdvertisingAddress != 'N/A' and ScanningAddress != 'N/A':
             if packet.get("Packet Type") == 'SCAN_REQ':
-                connection = (ScanningAddress, AdvertisingAddress)
+                source = ScanningAddress
+                destination = AdvertisingAddress
             else:
-                connection = (AdvertisingAddress, ScanningAddress)
-            ConnectionList.append(connection)
-    g = nx.DiGraph((x, y, {'weight': v}) for (x, y), v in Counter(ConnectionList).items())
-    # Configure the positions of the nodes, with a desired distance and inter
-    pos = nx.spring_layout(g, k=4, iterations=50)
-    # Define the variables, and where they get their values from
-    labels = nx.get_edge_attributes(g, 'weight')
-    # Draw the edge labels
-    nx.draw_networkx_edge_labels(g, pos, edge_labels=labels,
-                                 font_size=7, label_pos=0.4)
-    # Draw the diagram with the wanted parameters
-    nx.draw(g, pos, with_labels=True, node_size=50, font_size=7,
-            font_color='red', node_color='limegreen', width=1,
-            arrowsize=8)
-    # Display the diagram
-    plt.show()
+                destination = ScanningAddress
+                source = AdvertisingAddress
+            SourceList.append(source)
+            DestinationList.append(destination)
 
-def CrackCapture():
-    """ Creates a map of the network from the capture file """    
+    G = nx.Graph()
+
+    for i in range(len(SourceList)):
+        G.add_edge(SourceList[i], DestinationList[i])
+
+    pos = nx.spring_layout(G, k=0.5, iterations=50)
+    for n, p in pos.items():
+        G.nodes[n]['pos'] = p
+    
+    edge_x = []
+    edge_y = []
+    for edge in G.edges():
+        x0, y0 = G.nodes[edge[0]]['pos']
+        x1, y1 = G.nodes[edge[1]]['pos']
+        edge_x.append(x0)
+        edge_x.append(x1)
+        edge_x.append(None)
+        edge_y.append(y0)
+        edge_y.append(y1)
+        edge_y.append(None)
+
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(width=0.5, color='#888'),
+        hoverinfo='none',
+        mode='lines')
+
+    node_x = []
+    node_y = []
+    for node in G.nodes():
+        x, y = G.nodes[node]['pos']
+        node_x.append(x)
+        node_y.append(y)
+
+    node_trace = go.Scatter(
+        x=node_x, y=node_y,
+        mode='markers',
+        hoverinfo='text',
+        marker=dict(
+            showscale=True,
+            # colorscale options
+            #'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
+            #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
+            #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
+            colorscale='YlGnBu',
+            reversescale=True,
+            color=[],
+            size=10,
+            colorbar=dict(
+                thickness=15,
+                title='Device Connections',
+                xanchor='left',
+                titleside='right'
+            ),
+            line_width=2))
+
+    node_adjacencies = []
+    node_text = []
+    for node, adjacencies in enumerate(G.adjacency()):
+        node_adjacencies.append(len(adjacencies[1]))
+        node_text.append(adjacencies[0] + '<br>' + str(len(adjacencies[1])) + ' devices have sent or recieved packets from this device.')
+
+    node_trace.marker.color = node_adjacencies
+    node_trace.text = node_text
+
+    fig = go.Figure(data=[edge_trace, node_trace],
+                layout=go.Layout(
+                    title='Bluetooth Capture Network Graph',
+                    titlefont_size=16,
+                    showlegend=False,
+                    hovermode='closest',
+                    margin=dict(b=20,l=5,r=5,t=40),
+                    annotations=[ dict(
+                        text="Python code: <a href='https://plotly.com/ipython-notebooks/network-graphs/'> https://plotly.com/ipython-notebooks/network-graphs/</a>",
+                        showarrow=False,
+                        xref="paper", yref="paper",
+                        x=0.005, y=-0.002 ) ],
+                    xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+                    )
+    fig.show()
 
 # Declaring empty arrays for various pieces of data
 packetlistbox = []
