@@ -186,6 +186,9 @@ def PacketDetailsPopup(packet_number, capture_dict_array):
 
 def ExpandedAdvertisingDataPopup(advert_data):
     """ WRITE UP """
+
+    for idx, entry in enumerate(advert_data.entry):
+        print(f'Entry {idx + 1}:\n{entry}')
     
     layout3 = [[sg.Listbox(str(advert_data), size=(60, 29), enable_events=True, font="TkFixedFont", key='PacketDetails')],       # note must create a layout from scratch every time. No reuse
                 [sg.Button('Exit')]]
