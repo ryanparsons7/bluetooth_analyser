@@ -180,25 +180,93 @@ def PacketDetailsPopup(packet_number, capture_dict_array):
             packet_detail = values2["PacketDetails"][0]
             if packet_detail.startswith('Advertising Data:'):
                 if not packet_detail.startswith('Advertising Data: N/A'):
-                    ExpandedAdvertisingDataPopup(capture_dict_array[packet_number].get("Advertising Data"))
+                    ExpandedAdvertisingDataPopup(capture_dict_array[packet_number].get("Advertising Data"), capture_dict_array[packet_number].get("Packet Type"))
             else:
                 ExpandedPacketDetails(packet_detail)
 
-def ExpandedAdvertisingDataPopup(advert_data):
+def ExpandedAdvertisingDataPopup(advert_data, packet_type):
     """ WRITE UP """
 
-    for idx, entry in enumerate(advert_data.entry):
-        print(f'Entry {idx + 1}:\n{entry}')
+    entries = []
+    entry_length = 1
+
+    if type(advert_data.entry) == pyshark.packet.layer.JsonLayer:
+        entries.append(f'Entry 1')  
+    else:
+        entry_length = 0
+        for idx, entry in enumerate(advert_data.entry):
+            print(f'Entry {idx + 1}:\n{entry}')
+            entries.append(f'Entry {idx + 1}')
+            entry_length = entry_length + 1
+
+    print(f'Number of Entries: {entry_length}')
     
-    layout3 = [[sg.Listbox(str(advert_data), size=(60, 29), enable_events=True, font="TkFixedFont", key='PacketDetails')],       # note must create a layout from scratch every time. No reuse
+    layout3 = [[sg.Listbox(entries, size=(100, 20), enable_events=True, font="TkFixedFont", key='AdvertDetails')],       # note must create a layout from scratch every time. No reuse
                 [sg.Button('Exit')]]
 
-    AdvertisingDataDetailsWindow = sg.Window('Packet Details', layout3, modal=True, icon='icons/bluetooth.ico')
+    AdvertisingDataDetailsWindow = sg.Window('Advertising Data Details', layout3, modal=True, icon='icons/bluetooth.ico')
     while True:
         event3, values3 = AdvertisingDataDetailsWindow.read()
+        print(event3, values3) # Print any values or events that get produced
         if event3 == sg.WIN_CLOSED or event3 == 'Exit':
             AdvertisingDataDetailsWindow.close()
             break
+        if event3 == 'AdvertDetails':
+            if values3["AdvertDetails"][0] == '< Back':
+                AdvertisingDataDetailsWindow.FindElement('AdvertDetails').Update(values=entries)
+            elif values3["AdvertDetails"][0].startswith('Entry'):
+                entry_number = int(values3["AdvertDetails"][0][-1:])
+                print(entry_number)
+                new_list = ['< Back']
+                if packet_type == 'ADV_SCAN_IND':
+                    if entry_number == 1:
+                        new_list.append(f'Length: {advert_data.entry[0].length}')
+                        new_list.append(f'UUID 16: {advert_data.entry[0].uuid_16}')
+                        new_list.append(f'Type: {advert_data.entry[0].type}')
+                    if entry_number == 2:
+                        new_list.append(f'Length: {advert_data.entry[1].length}')
+                        new_list.append(f'UUID 16: {advert_data.entry[1].uuid_16}')
+                        new_list.append(f'Service Data: {advert_data.entry[1].service_data}')
+                        new_list.append(f'Type: {advert_data.entry[1].type}')
+                if packet_type == 'ADV_IND':
+                    if entry_length == 3:
+                        if entry_number == 1:
+                            new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
+                            new_list.append(f'Low Energy Limited Discoverable Mode: {advert_data.entry[0].le_limited_discoverable_mode}')
+                            new_list.append(f'Length: {advert_data.entry[0].length}')
+                            new_list.append(f'Type: {advert_data.entry[0].type}')
+                            new_list.append(f'Low Energy BREDR Support Host: {advert_data.entry[0].le_bredr_support_host}')
+                            new_list.append(f'Low Energy BREDR Support Controller: {advert_data.entry[0].le_bredr_support_controller}')
+                            new_list.append(f'BREDR Not Supported: {advert_data.entry[0].bredr_not_supported}')
+                        if entry_number == 2:
+                            new_list.append(f'Type: {advert_data.entry[1].type}')
+                            new_list.append(f'Power Level: {advert_data.entry[1].power_level}')
+                            new_list.append(f'Length: {advert_data.entry[1].length}')
+                        if entry_number == 3:
+                            new_list.append(f'Length: {advert_data.entry[2].length}')
+                            new_list.append(f'Data: {advert_data.entry[2].data}')
+                            new_list.append(f'Type: {advert_data.entry[2].type}')
+                            new_list.append(f'Company ID: {advert_data.entry[2].company_id}')
+                    elif entry_length == 2:
+                        if entry_number == 1:
+                            new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
+                            new_list.append(f'Low Energy Limited Discoverable Mode: {advert_data.entry[0].le_limited_discoverable_mode}')
+                            new_list.append(f'Length: {advert_data.entry[0].length}')
+                            new_list.append(f'Type: {advert_data.entry[0].type}')
+                            new_list.append(f'Low Energy BREDR Support Host: {advert_data.entry[0].le_bredr_support_host}')
+                            new_list.append(f'Low Energy BREDR Support Controller: {advert_data.entry[0].le_bredr_support_controller}')
+                            new_list.append(f'BREDR Not Supported: {advert_data.entry[0].bredr_not_supported}')
+                        if entry_number == 2:
+                            new_list.append(f'Length: {advert_data.entry[1].length}')
+                            new_list.append(f'Data: {advert_data.entry[1].data}')
+                            new_list.append(f'Type: {advert_data.entry[1].type}')
+                            new_list.append(f'Company ID: {advert_data.entry[1].company_id}')                 
+                if packet_type == 'ADV_NONCONN_IND':
+                    new_list.append(f'Company ID: {advert_data.entry.company_id}')
+                    new_list.append(f'Data: {advert_data.entry.data}')
+                    new_list.append(f'Length: {advert_data.entry.length}')
+                    new_list.append(f'Type: {advert_data.entry.type}')
+                AdvertisingDataDetailsWindow.FindElement('AdvertDetails').Update(values=new_list)
 
 def ExpandedPacketDetails(detail):
     """ Function that inputs the detail for the packet that was selected and shows popups of the requested information """
