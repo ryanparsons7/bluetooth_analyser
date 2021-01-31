@@ -151,6 +151,11 @@ def PacketDetailsPopup(packet_number, capture_dict_array):
 
     packet_number = int(packet_number) - 1
 
+    if capture_dict_array[packet_number].get("Advertising Data") == 'N/A':
+        advertising_data_string = 'N/A'
+    else:
+        advertising_data_string = 'Click for more info'
+
     packet_detail_list = [
         f'Packet Number: {packet_number + 1}',
         f'Advertising Address: {capture_dict_array[packet_number].get("Advertising Address")}',
@@ -160,7 +165,7 @@ def PacketDetailsPopup(packet_number, capture_dict_array):
         f'Packet Type: {capture_dict_array[packet_number].get("Packet Type")}',
         f'CRC: {capture_dict_array[packet_number].get("CRC")}',
         f'Company: {capture_dict_array[packet_number].get("Company")}',
-        f'Advertising Data: {capture_dict_array[packet_number].get("Advertising Data")}']
+        f'Advertising Data: {advertising_data_string}']
 
     layout2 = [[sg.Listbox(packet_detail_list, size=(60, 29), enable_events=True, font="TkFixedFont", key='PacketDetails')],       # note must create a layout from scratch every time. No reuse
                 [sg.Button('Exit')]]
@@ -173,12 +178,28 @@ def PacketDetailsPopup(packet_number, capture_dict_array):
             break
         if event2 == 'PacketDetails':
             packet_detail = values2["PacketDetails"][0]
-            ExpandedPacketDetails(packet_detail)
+            if packet_detail.startswith('Advertising Data:'):
+                if not packet_detail.startswith('Advertising Data: N/A'):
+                    ExpandedAdvertisingDataPopup(capture_dict_array[packet_number].get("Advertising Data"))
+            else:
+                ExpandedPacketDetails(packet_detail)
+
+def ExpandedAdvertisingDataPopup(advert_data):
+    """ WRITE UP """
+    
+    layout3 = [[sg.Listbox(str(advert_data), size=(60, 29), enable_events=True, font="TkFixedFont", key='PacketDetails')],       # note must create a layout from scratch every time. No reuse
+                [sg.Button('Exit')]]
+
+    AdvertisingDataDetailsWindow = sg.Window('Packet Details', layout3, modal=True, icon='icons/bluetooth.ico')
+    while True:
+        event3, values3 = AdvertisingDataDetailsWindow.read()
+        if event3 == sg.WIN_CLOSED or event3 == 'Exit':
+            AdvertisingDataDetailsWindow.close()
+            break
 
 def ExpandedPacketDetails(detail):
     """ Function that inputs the detail for the packet that was selected and shows popups of the requested information """
 
-    
     # Dictionary containing packet details that are given to the user if they click on the specific packet detail.
     expanded_packet_detail_list = { 
             'Packet Number': 'This is the number of the packet in the order is was captured, starting from 1.',
@@ -207,19 +228,8 @@ def ExpandedPacketDetails(detail):
             sg.popup(expanded_packet_type_detail_list[type_string], title=type_string, keep_on_top=True, icon='icons/bluetooth.ico') # Popup showing packet type information.
         except KeyError:
             sg.popup_error('The packet type was not found within the database.', icon='icons/bluetooth.ico')
-    elif detail_string == 'Advertising Data':
-        AdvertisingDataExpandedInfoPopup(detail)
     else:
         sg.popup(expanded_packet_detail_list[detail_string], title=detail_string, keep_on_top=True, icon='icons/bluetooth.ico') # Popup showing packet detail information, no packet type info.
-
-
-def AdvertisingDataExpandedInfoPopup(advert_data):
-    advert_data = advert_data[18:]
-    if not advert_data == 'N/A':
-        advert_data_explained = f'{advert_data}\n\n\n Above is the raw advertising data from this packet, depending on the packet type, different data will be provided.'
-    else:
-        advert_data_explained = 'No Advertising Data is found within this packet.\nPlease examine a packet with a type containing "ADV" in the name'
-    sg.popup(advert_data_explained, title='Advertising Data', keep_on_top=True, icon='icons/bluetooth.ico') # Popup showing advertising data details.
 
 def PopulateUniqueDevicesList(capture_dict):
     """ Function that takes in the capture details and populates the unique devices list """
@@ -494,7 +504,7 @@ def NetworkMap(capture_dict):
             #'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
             #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
             #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
-            colorscale='YlGnBu',
+            colorscale='RdBu',
             reversescale=True,
             color=[],
             size=10,
@@ -510,7 +520,7 @@ def NetworkMap(capture_dict):
     node_text = []
     for node, adjacencies in enumerate(G.adjacency()):
         node_adjacencies.append(len(adjacencies[1]))
-        node_text.append(adjacencies[0] + '<br>' + str(len(adjacencies[1])) + ' devices have sent or recieved packets from this device.')
+        node_text.append(adjacencies[0] + '<br>' + str(len(adjacencies[1])) + ' device(s) have sent or recieved packets from this device.')
 
     node_trace.marker.color = node_adjacencies
     node_trace.text = node_text
@@ -612,7 +622,7 @@ def main():
             
                 PacketDetailsWindowActive = True # Declare the packet details window is going to open
 
-                PacketDetailsPopup(packet_number, capture_dictionary) # Openn the packet details window with the correct info and packet number
+                PacketDetailsPopup(packet_number, capture_dictionary) # Open the packet details window with the correct info and packet number
 
                 PacketDetailsWindowActive = False # After the window has closed, declare it is no longer active
             except IndexError: # If the user clicks on the empty packet list box
