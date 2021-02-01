@@ -185,7 +185,8 @@ def PacketDetailsPopup(packet_number, capture_dict_array):
                 ExpandedPacketDetails(packet_detail)
 
 def ExpandedAdvertisingDataPopup(advert_data, packet_type):
-    """ WRITE UP """
+    """ This function runs whenever the user presses on the advertising data section to see more information.
+    The function will then take in the packet type and advertising data, determine what format the data will be stored in and display it to user. """
 
     entries = []
     entry_length = 1
@@ -229,24 +230,42 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
                         new_list.append(f'Service Data: {advert_data.entry[1].service_data}')
                         new_list.append(f'Type: {advert_data.entry[1].type}')
                 if packet_type == 'ADV_IND':
+                    try:
+                        test_var = advert_data.entry[0].le_general_discoverable_mode
+                        ADV_IND_Type = 1
+                    except AttributeError:
+                        ADV_IND_Type = 2
                     if entry_length == 3:
-                        if entry_number == 1:
-                            new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
-                            new_list.append(f'Low Energy Limited Discoverable Mode: {advert_data.entry[0].le_limited_discoverable_mode}')
-                            new_list.append(f'Length: {advert_data.entry[0].length}')
-                            new_list.append(f'Type: {advert_data.entry[0].type}')
-                            new_list.append(f'Low Energy BREDR Support Host: {advert_data.entry[0].le_bredr_support_host}')
-                            new_list.append(f'Low Energy BREDR Support Controller: {advert_data.entry[0].le_bredr_support_controller}')
-                            new_list.append(f'BREDR Not Supported: {advert_data.entry[0].bredr_not_supported}')
-                        if entry_number == 2:
-                            new_list.append(f'Type: {advert_data.entry[1].type}')
-                            new_list.append(f'Power Level: {advert_data.entry[1].power_level}')
-                            new_list.append(f'Length: {advert_data.entry[1].length}')
-                        if entry_number == 3:
-                            new_list.append(f'Length: {advert_data.entry[2].length}')
-                            new_list.append(f'Data: {advert_data.entry[2].data}')
-                            new_list.append(f'Type: {advert_data.entry[2].type}')
-                            new_list.append(f'Company ID: {advert_data.entry[2].company_id}')
+                        if ADV_IND_Type == 1:
+                            if entry_number == 1:
+                                new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
+                                new_list.append(f'Low Energy Limited Discoverable Mode: {advert_data.entry[0].le_limited_discoverable_mode}')
+                                new_list.append(f'Length: {advert_data.entry[0].length}')
+                                new_list.append(f'Type: {advert_data.entry[0].type}')
+                                new_list.append(f'Low Energy BREDR Support Host: {advert_data.entry[0].le_bredr_support_host}')
+                                new_list.append(f'Low Energy BREDR Support Controller: {advert_data.entry[0].le_bredr_support_controller}')
+                                new_list.append(f'BREDR Not Supported: {advert_data.entry[0].bredr_not_supported}')
+                            if entry_number == 2:
+                                new_list.append(f'Type: {advert_data.entry[1].type}')
+                                new_list.append(f'Power Level: {advert_data.entry[1].power_level}')
+                                new_list.append(f'Length: {advert_data.entry[1].length}')
+                            if entry_number == 3:
+                                new_list.append(f'Length: {advert_data.entry[2].length}')
+                                new_list.append(f'Data: {advert_data.entry[2].data}')
+                                new_list.append(f'Type: {advert_data.entry[2].type}')
+                                new_list.append(f'Company ID: {advert_data.entry[2].company_id}')
+                        elif ADV_IND_Type == 2:
+                            if entry_number == 1:
+                                new_list.append(f'Device Name: {advert_data.entry[0].device_name}')
+                                new_list.append(f'Length: {advert_data.entry[0].length}')
+                                new_list.append(f'Type: {advert_data.entry[0].type}')
+                            if entry_number == 2:
+                                new_list.append(f'Length: {advert_data.entry[1].length}')
+                                new_list.append(f'Type: {advert_data.entry[1].type}')
+                            if entry_number == 3:
+                                new_list.append(f'SSP OOB Length: {advert_data.entry[2].ssp_oob_length}')
+                                new_list.append(f'Length: {advert_data.entry[2].length}')
+                                new_list.append(f'Type: {advert_data.entry[2].type}')
                     elif entry_length == 2:
                         if entry_number == 1:
                             new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
