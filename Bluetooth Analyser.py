@@ -519,6 +519,7 @@ def ExportPCAP():
 
 def ApplyFilter(capture_dict, type_filter, address_filter):
     """ Applies filters to the capture dictionary and resubmits it to the displays """
+    
     new_capture = []
     for packet in capture_dict:
         match = True
