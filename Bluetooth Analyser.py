@@ -537,6 +537,8 @@ def NetworkMap(capture_dict):
     """ Creates a map of the network from the capture file """
     SourceList = []
     DestinationList = []
+    StandaloneList = []
+
     for packet in capture_dict:
         AdvertisingAddress = packet.get("Advertising Address")
         ScanningAddress = packet.get("Scanning Address")
@@ -549,8 +551,16 @@ def NetworkMap(capture_dict):
                 source = AdvertisingAddress
             SourceList.append(source)
             DestinationList.append(destination)
+        
+        if AdvertisingAddress not in StandaloneList and not AdvertisingAddress == 'N/A':
+            StandaloneList.append(AdvertisingAddress)
+        
+        if ScanningAddress not in StandaloneList and not ScanningAddress == 'N/A':
+            StandaloneList.append(ScanningAddress)
 
     G = nx.Graph()
+
+    G.add_nodes_from(StandaloneList)
 
     for i in range(len(SourceList)):
         G.add_edge(SourceList[i], DestinationList[i])
