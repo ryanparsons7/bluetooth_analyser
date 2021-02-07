@@ -145,6 +145,60 @@ def createDir(folder_path):
         print(f'Exception Occured: {err}')
         quit()
 
+def GetAdvertisingDataType(type_hex):
+    """ Takes in the advertising entry type in hex and outputs a string of the type. """
+
+    type_dict = {
+        '0x1': 'Flags',
+        '0x2': 'Incomplete List of 16-bit Service Class UUIDs',
+        '0x3': 'Complete List of 16-bit Service Class UUIDs',
+        '0x4': 'Incomplete List of 32-bit Service Class UUIDs',
+        '0x5': 'Complete List of 32-bit Service Class UUIDs',
+        '0x6': 'Incomplete List of 128-bit Service Class UUIDs',
+        '0x7': 'Complete List of 128-bit Service Class UUIDs',
+        '0x8': 'Shortened Local Name',
+        '0x9': 'Complete Local Name',
+        '0xa': 'Tx Power Level',
+        '0xb': 'OOB Optional Data Length',
+        '0xd': 'Class of Device',
+        '0xe': 'Simple Pairing Hash C',
+        '0xf': 'Simple Pairing Randomizer R',
+        '0x10': 'Security Manager TK Value',
+        '0x11': 'Security Manager Out of Band Flags',
+        '0x12': 'Slave Connection Interval Range',
+        '0x14': 'List of 16-bit Service Solicitation UUIDs',
+        '0x15': 'List of 128-bit Service Solicitation UUIDs',
+        '0x16': 'Service Data - 16-bit UUID',
+        '0x17': 'Public Target Address',
+        '0x18': 'Random Target Address',
+        '0x19': 'Appearance',
+        '0x1a': 'Advertising Interval',
+        '0x1b': 'LE Bluetooth Device Address',
+        '0x1c': 'LE Role',
+        '0x1d': 'Simple Pairing Hash C-256',
+        '0x1e': 'Simple Pairing Randomizer R-256',
+        '0x1f': 'List of 32-bit Service Solicitation UUIDs',
+        '0x20': 'Service Data - 32-bit UUID',
+        '0x21': 'Service Data - 128-bit UUID',
+        '0x22': 'LE Secure Connections Confirmation Value',
+        '0x23': 'LE Secure Connections Random Value',
+        '0x24': 'URI',
+        '0x25': 'Indoor Positioning',
+        '0x26': 'Transport Discovery Data',
+        '0x27': 'LE Supported Features',
+        '0x28': 'Channel Map Update Indication',
+        '0x29': 'PB-ADV',
+        '0x2b': 'Mesh Message',
+        '0x2b': 'Mesh Beacon',
+        '0x2c': 'BIGInfo',
+        '0x2d': 'Broadcast_Code',
+        '0x3d': '3D Information Data',
+        '0xff': 'Manufacturer Specific Data'
+    }
+
+    return type_dict[type_hex]
+
+
 def PacketDetailsPopup(packet_number, capture_dict_array):
     """ Takes in a packet number and capure information in the form of a array of dictionaries when the user clicks on a specific packet.
         This will then create a window containing the information regarding that packet """
@@ -188,6 +242,21 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
     """ This function runs whenever the user presses on the advertising data section to see more information.
     The function will then take in the packet type and advertising data, determine what format the data will be stored in and display it to user. """
 
+    
+    expanded_advertising_detail_list = { 
+        'Length': 'This value indicates how long the entry is in bytes.',
+        'UUID 16': 'The universally unique identifier (UUID) is a ID that is allocated to a specific group or company.',
+        'Type': 'This indicates the type of entry.',
+        'Data': 'This is the data for this entry in raw format.',
+        'Low Energy General Discoverable Mode': 'This indicates to scanning devices that the advertising device is in General Discoverable Mode.\n0x01 = Enabled\n0x00 = Disabled',
+        'Low Energy Limited Discoverable Mode': 'This indicates to scanning devices that the advertising device is in Limited Discoverable Mode. This mode generally has higher priority over General mode, and has a faster advertising interval.\n0x01 = Enabled\n0x00 = Disabled',
+        'Power Level': 'The transmitted power of the packet in dBm.',
+        'Low Energy BREDR Support Controller': 'Indicates that the use of both Low Energy and BR/EDR to the same device (Controller), is allowed.',
+        'Low Energy BREDR Support Host': 'Indicates that the use of both Low Energy and BR/EDR to the same device (Host), is allowed.',
+        'Company ID': 'The manufacturer company ID, this is converted for you to the company name in the previous window.',
+        'BREDR Not Supported': 'Indicates that the device does not support BR/EDR (Enhanced Data Rate)'
+        }
+
     entries = []
     entry_length = 1
 
@@ -215,6 +284,28 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
         if event3 == 'AdvertDetails':
             if values3["AdvertDetails"][0] == '< Back':
                 AdvertisingDataDetailsWindow.FindElement('AdvertDetails').Update(values=entries)
+            elif values3["AdvertDetails"][0].startswith('Length'):
+                sg.popup(expanded_advertising_detail_list['Length'], title='Length', keep_on_top=True, icon='icons/bluetooth.ico')
+            elif values3["AdvertDetails"][0].startswith('UUID 16'):
+                sg.popup(expanded_advertising_detail_list['UUID 16'], title='UUID 16', keep_on_top=True, icon='icons/bluetooth.ico')
+            elif values3["AdvertDetails"][0].startswith('Type'):
+                sg.popup(expanded_advertising_detail_list['Type'], title='Type', keep_on_top=True, icon='icons/bluetooth.ico')
+            elif values3["AdvertDetails"][0].startswith('Data'):
+                sg.popup(expanded_advertising_detail_list['Data'], title='Data', keep_on_top=True, icon='icons/bluetooth.ico')
+            elif values3["AdvertDetails"][0].startswith('Low Energy General Discoverable Mode'):
+                sg.popup(expanded_advertising_detail_list['Low Energy General Discoverable Mode'], title='Low Energy General Discoverable Mode', keep_on_top=True, icon='icons/bluetooth.ico')
+            elif values3["AdvertDetails"][0].startswith('Low Energy Limited Discoverable Mode'):
+                sg.popup(expanded_advertising_detail_list['Low Energy Limited Discoverable Mode'], title='Low Energy Limited Discoverable Mode', keep_on_top=True, icon='icons/bluetooth.ico')
+            elif values3["AdvertDetails"][0].startswith('Power Level'):
+                sg.popup(expanded_advertising_detail_list['Power Level'], title='Power Level', keep_on_top=True, icon='icons/bluetooth.ico')
+            elif values3["AdvertDetails"][0].startswith('Low Energy BREDR Support Controller'):
+                sg.popup(expanded_advertising_detail_list['Low Energy BREDR Support Controller'], title='Low Energy BREDR Support Controller', keep_on_top=True, icon='icons/bluetooth.ico')
+            elif values3["AdvertDetails"][0].startswith('Low Energy BREDR Support Host'):
+                sg.popup(expanded_advertising_detail_list['Low Energy BREDR Support Host'], title='Low Energy BREDR Support Host', keep_on_top=True, icon='icons/bluetooth.ico')
+            elif values3["AdvertDetails"][0].startswith('BREDR Not Supported'):
+                sg.popup(expanded_advertising_detail_list['BREDR Not Supported'], title='BREDR Not Supported', keep_on_top=True, icon='icons/bluetooth.ico')
+            elif values3["AdvertDetails"][0].startswith('Company ID'):
+                sg.popup(expanded_advertising_detail_list['Company ID'], title='Company ID', keep_on_top=True, icon='icons/bluetooth.ico')
             elif values3["AdvertDetails"][0].startswith('Entry'):
                 entry_number = int(values3["AdvertDetails"][0][-1:])
                 print(entry_number)
@@ -222,13 +313,16 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
                 if packet_type == 'ADV_SCAN_IND':
                     if entry_number == 1:
                         new_list.append(f'Length: {advert_data.entry[0].length}')
-                        new_list.append(f'UUID 16: {advert_data.entry[0].uuid_16}')
-                        new_list.append(f'Type: {advert_data.entry[0].type}')
+                        new_list.append(f'UUID 16: {hex(int(advert_data.entry[0].uuid_16))}')
+                        new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
                     if entry_number == 2:
                         new_list.append(f'Length: {advert_data.entry[1].length}')
-                        new_list.append(f'UUID 16: {advert_data.entry[1].uuid_16}')
-                        new_list.append(f'Service Data: {advert_data.entry[1].service_data}')
-                        new_list.append(f'Type: {advert_data.entry[1].type}')
+                        new_list.append(f'UUID 16: {hex(int(advert_data.entry[1].uuid_16))}')
+                        try:
+                            new_list.append(f'Service Data: {advert_data.entry[1].service_data}')
+                        except Exception:
+                            print('Service Data was not found, skipping this entry data point.')
+                        new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
                 if packet_type == 'ADV_IND':
                     try:
                         test_var = advert_data.entry[0].le_general_discoverable_mode
@@ -241,50 +335,50 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
                                 new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
                                 new_list.append(f'Low Energy Limited Discoverable Mode: {advert_data.entry[0].le_limited_discoverable_mode}')
                                 new_list.append(f'Length: {advert_data.entry[0].length}')
-                                new_list.append(f'Type: {advert_data.entry[0].type}')
+                                new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
                                 new_list.append(f'Low Energy BREDR Support Host: {advert_data.entry[0].le_bredr_support_host}')
                                 new_list.append(f'Low Energy BREDR Support Controller: {advert_data.entry[0].le_bredr_support_controller}')
                                 new_list.append(f'BREDR Not Supported: {advert_data.entry[0].bredr_not_supported}')
                             if entry_number == 2:
-                                new_list.append(f'Type: {advert_data.entry[1].type}')
+                                new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
                                 new_list.append(f'Power Level: {advert_data.entry[1].power_level}')
                                 new_list.append(f'Length: {advert_data.entry[1].length}')
                             if entry_number == 3:
                                 new_list.append(f'Length: {advert_data.entry[2].length}')
                                 new_list.append(f'Data: {advert_data.entry[2].data}')
-                                new_list.append(f'Type: {advert_data.entry[2].type}')
+                                new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[2].type)))}')
                                 new_list.append(f'Company ID: {advert_data.entry[2].company_id}')
                         elif ADV_IND_Type == 2:
                             if entry_number == 1:
                                 new_list.append(f'Device Name: {advert_data.entry[0].device_name}')
                                 new_list.append(f'Length: {advert_data.entry[0].length}')
-                                new_list.append(f'Type: {advert_data.entry[0].type}')
+                                new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
                             if entry_number == 2:
                                 new_list.append(f'Length: {advert_data.entry[1].length}')
-                                new_list.append(f'Type: {advert_data.entry[1].type}')
+                                new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
                             if entry_number == 3:
                                 new_list.append(f'SSP OOB Length: {advert_data.entry[2].ssp_oob_length}')
                                 new_list.append(f'Length: {advert_data.entry[2].length}')
-                                new_list.append(f'Type: {advert_data.entry[2].type}')
+                                new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[2].type)))}')
                     elif entry_length == 2:
                         if entry_number == 1:
                             new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
                             new_list.append(f'Low Energy Limited Discoverable Mode: {advert_data.entry[0].le_limited_discoverable_mode}')
                             new_list.append(f'Length: {advert_data.entry[0].length}')
-                            new_list.append(f'Type: {advert_data.entry[0].type}')
+                            new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
                             new_list.append(f'Low Energy BREDR Support Host: {advert_data.entry[0].le_bredr_support_host}')
                             new_list.append(f'Low Energy BREDR Support Controller: {advert_data.entry[0].le_bredr_support_controller}')
                             new_list.append(f'BREDR Not Supported: {advert_data.entry[0].bredr_not_supported}')
                         if entry_number == 2:
                             new_list.append(f'Length: {advert_data.entry[1].length}')
                             new_list.append(f'Data: {advert_data.entry[1].data}')
-                            new_list.append(f'Type: {advert_data.entry[1].type}')
+                            new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
                             new_list.append(f'Company ID: {advert_data.entry[1].company_id}')                 
                 if packet_type == 'ADV_NONCONN_IND':
                     new_list.append(f'Company ID: {advert_data.entry.company_id}')
                     new_list.append(f'Data: {advert_data.entry.data}')
                     new_list.append(f'Length: {advert_data.entry.length}')
-                    new_list.append(f'Type: {advert_data.entry.type}')
+                    new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry.type)))}')
                 AdvertisingDataDetailsWindow.FindElement('AdvertDetails').Update(values=new_list)
 
 def ExpandedPacketDetails(detail):
@@ -334,7 +428,7 @@ def PopulateUniqueDevicesList(capture_dict):
             AuxList.append(ScanningAddress)
     MainWindow.FindElement('DeviceListBox').Update(values=AuxList)
     AddrFilterList = AuxList
-    AddrFilterList.append('Any')
+    AddrFilterList.insert(0, 'Any')
     MainWindow.FindElement('AddrFilter').Update(values=AddrFilterList)
 
 def PopulateUniqueConnectionsList(capture_dict):
@@ -384,9 +478,6 @@ def ParseBluetoothPCAP(capture):
         
         # Filled in the packet number, no exception needed
         packet_information['Packet Number'] = packet_number
-        
-        if packet_number == 246:
-            print(packet)
 
         # Try to fill in the advertising address, if an exception occurs, fill in as N/A
         try:
@@ -532,10 +623,29 @@ def ApplyFilter(capture_dict, type_filter, address_filter):
     
     if new_capture != None: # Check if the returned capture is not empty, if it has data assigned, continue with the processes.
         PopulatePacketList(new_capture) # Populate packet list
-    
+
+def NetworkMapInfoGen(capture_dict):
+    """ Generates a dictionary of packets with address as the key, and the manufacter as the value """
+
+    device_dict = {}
+
+    for packet in capture_dict:
+        AdvertisingAddress = packet.get("Advertising Address")
+        ScanningAddress = packet.get("Scanning Address")
+        if AdvertisingAddress not in device_dict and not AdvertisingAddress == 'N/A':
+            device_dict[AdvertisingAddress] = 'N/A'
+        if ScanningAddress not in device_dict and not ScanningAddress == 'N/A':
+            device_dict[ScanningAddress] = 'N/A'                
+
+    for packet in capture_dict:
+        if packet['Packet Type'] == 'ADV_IND' or packet['Packet Type'] == 'ADV_DIRECT_IND' or packet['Packet Type'] == 'ADV_NONCONN_IND' or packet['Packet Type'] == 'ADV_SCAN_IND':
+            device_dict[packet['Advertising Address']] = packet['Company']
+    return(device_dict)
 
 def NetworkMap(capture_dict):
     """ Creates a map of the network from the capture file """
+
+    device_dictionary = NetworkMapInfoGen(capture_dict)
     SourceList = []
     DestinationList = []
     StandaloneList = []
@@ -585,7 +695,7 @@ def NetworkMap(capture_dict):
     edge_trace = go.Scatter(
         x=edge_x, y=edge_y,
         line=dict(width=0.5, color='#888'),
-        hoverinfo='none',
+        hoverinfo='text',
         mode='lines')
 
     node_x = []
@@ -621,7 +731,7 @@ def NetworkMap(capture_dict):
     node_text = []
     for node, adjacencies in enumerate(G.adjacency()):
         node_adjacencies.append(len(adjacencies[1]))
-        node_text.append(adjacencies[0] + '<br>' + str(len(adjacencies[1])) + ' device(s) have sent or recieved packets from this device.')
+        node_text.append('Address: ' + adjacencies[0] + '<br>' + str(len(adjacencies[1])) + ' device(s) have sent or recieved packets from this device.' + '<br>' + 'Company Name: ' + str(device_dictionary[adjacencies[0]]))
 
     node_trace.marker.color = node_adjacencies
     node_trace.text = node_text
