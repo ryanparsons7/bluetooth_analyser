@@ -311,25 +311,38 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
                 print(entry_number)
                 new_list = ['< Back']
                 if packet_type == 'ADV_SCAN_IND':
-                    if entry_number == 1:
-                        new_list.append(f'Length: {advert_data.entry[0].length}')
-                        new_list.append(f'UUID 16: {hex(int(advert_data.entry[0].uuid_16))}')
-                        new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
-                    if entry_number == 2:
-                        new_list.append(f'Length: {advert_data.entry[1].length}')
-                        new_list.append(f'UUID 16: {hex(int(advert_data.entry[1].uuid_16))}')
-                        try:
-                            new_list.append(f'Service Data: {advert_data.entry[1].service_data}')
-                        except Exception:
-                            print('Service Data was not found, skipping this entry data point.')
-                        new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
-                if packet_type == 'ADV_IND':
                     try:
-                        test_var = advert_data.entry[0].le_general_discoverable_mode
-                        ADV_IND_Type = 1
+                        test_var = advert_data.entry[1].service_data
+                        ADV_SCAN_IND_Type = 1
                     except AttributeError:
-                        ADV_IND_Type = 2
+                        ADV_SCAN_IND_Type = 2
+                    if ADV_SCAN_IND_Type == 1:
+                        if entry_number == 1:
+                            new_list.append(f'Length: {advert_data.entry[0].length}')
+                            new_list.append(f'UUID 16: {hex(int(advert_data.entry[0].uuid_16))}')
+                            new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
+                        if entry_number == 2:
+                            new_list.append(f'Length: {advert_data.entry[1].length}')
+                            new_list.append(f'UUID 16: {hex(int(advert_data.entry[1].uuid_16))}')
+                            new_list.append(f'Service Data: {advert_data.entry[1].service_data}')
+                            new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
+                    if ADV_SCAN_IND_Type == 2:
+                        if entry_number == 1:
+                            new_list.append(f'Length: {advert_data.entry[0].length}')
+                            new_list.append(f'UUID 16: {hex(int(advert_data.entry[0].uuid_16))}')
+                            new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
+                        if entry_number == 2:
+                            new_list.append(f'Length: {advert_data.entry[1].length}')
+                            new_list.append(f'UUID 16: {hex(int(advert_data.entry[1].uuid_16))}')
+                            new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
+                    
+                if packet_type == 'ADV_IND':
                     if entry_length == 3:
+                        try:
+                            test_var = advert_data.entry[0].le_general_discoverable_mode
+                            ADV_IND_Type = 1
+                        except AttributeError:
+                            ADV_IND_Type = 2
                         if ADV_IND_Type == 1:
                             if entry_number == 1:
                                 new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
@@ -361,19 +374,42 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
                                 new_list.append(f'Length: {advert_data.entry[2].length}')
                                 new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[2].type)))}')
                     elif entry_length == 2:
-                        if entry_number == 1:
-                            new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
-                            new_list.append(f'Low Energy Limited Discoverable Mode: {advert_data.entry[0].le_limited_discoverable_mode}')
-                            new_list.append(f'Length: {advert_data.entry[0].length}')
-                            new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
-                            new_list.append(f'Low Energy BREDR Support Host: {advert_data.entry[0].le_bredr_support_host}')
-                            new_list.append(f'Low Energy BREDR Support Controller: {advert_data.entry[0].le_bredr_support_controller}')
-                            new_list.append(f'BREDR Not Supported: {advert_data.entry[0].bredr_not_supported}')
-                        if entry_number == 2:
-                            new_list.append(f'Length: {advert_data.entry[1].length}')
-                            new_list.append(f'Data: {advert_data.entry[1].data}')
-                            new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
-                            new_list.append(f'Company ID: {advert_data.entry[1].company_id}')                 
+                        try:
+                            test_var = advert_data.entry[1].data
+                            ADV_IND_Type = 1
+                        except AttributeError:
+                            ADV_IND_Type = 2
+                        if ADV_IND_Type == 1:
+                            if entry_number == 1:
+                                new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
+                                new_list.append(f'Low Energy Limited Discoverable Mode: {advert_data.entry[0].le_limited_discoverable_mode}')
+                                new_list.append(f'Length: {advert_data.entry[0].length}')
+                                new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
+                                new_list.append(f'Low Energy BREDR Support Host: {advert_data.entry[0].le_bredr_support_host}')
+                                new_list.append(f'Low Energy BREDR Support Controller: {advert_data.entry[0].le_bredr_support_controller}')
+                                new_list.append(f'BREDR Not Supported: {advert_data.entry[0].bredr_not_supported}')
+                            if entry_number == 2:
+                                new_list.append(f'Length: {advert_data.entry[1].length}')
+                                try:
+                                    new_list.append(f'Data: {advert_data.entry[1].data}')
+                                except Exception:
+                                    print('No data field, skipping field')
+                                new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
+                                new_list.append(f'Company ID: {advert_data.entry[1].company_id}')                 
+                        if ADV_IND_Type == 2:
+                            if entry_number == 1:
+                                new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
+                                new_list.append(f'Low Energy Limited Discoverable Mode: {advert_data.entry[0].le_limited_discoverable_mode}')
+                                new_list.append(f'Length: {advert_data.entry[0].length}')
+                                new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
+                                new_list.append(f'Low Energy BREDR Support Host: {advert_data.entry[0].le_bredr_support_host}')
+                                new_list.append(f'Low Energy BREDR Support Controller: {advert_data.entry[0].le_bredr_support_controller}')
+                                new_list.append(f'BREDR Not Supported: {advert_data.entry[0].bredr_not_supported}')
+                            if entry_number == 2:
+                                new_list.append(f'Length: {advert_data.entry[1].length}')
+                                new_list.append(f'UUID 16: {advert_data.entry[1].uuid_16}')
+                                new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
+
                 if packet_type == 'ADV_NONCONN_IND':
                     new_list.append(f'Company ID: {advert_data.entry.company_id}')
                     new_list.append(f'Data: {advert_data.entry.data}')
