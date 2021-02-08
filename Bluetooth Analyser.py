@@ -261,12 +261,12 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
     entry_length = 1
 
     if type(advert_data.entry) == pyshark.packet.layer.JsonLayer:
-        entries.append(f'Entry 1')  
+        entries.append(f'Entry 1: {GetAdvertisingDataType(hex(int(advert_data.entry.type)))}')  
     else:
         entry_length = 0
         for idx, entry in enumerate(advert_data.entry):
             print(f'Entry {idx + 1}:\n{entry}')
-            entries.append(f'Entry {idx + 1}')
+            entries.append(f'Entry {idx + 1}: {GetAdvertisingDataType(hex(int(advert_data.entry[idx].type)))}')
             entry_length = entry_length + 1
 
     print(f'Number of Entries: {entry_length}')
@@ -307,7 +307,7 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
             elif values3["AdvertDetails"][0].startswith('Company ID'):
                 sg.popup(expanded_advertising_detail_list['Company ID'], title='Company ID', keep_on_top=True, icon='icons/bluetooth.ico')
             elif values3["AdvertDetails"][0].startswith('Entry'):
-                entry_number = int(values3["AdvertDetails"][0][-1:])
+                entry_number = int(values3["AdvertDetails"][0][6:7])
                 print(entry_number)
                 new_list = ['< Back']
                 if packet_type == 'ADV_SCAN_IND':
