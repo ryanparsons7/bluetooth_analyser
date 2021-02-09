@@ -7,10 +7,14 @@ This repository is for my Honours Project at Edinburgh Napier University for Cyb
 - Python 3 Installed. (https://www.python.org/downloads/)
 - Wireshark Installed. (https://www.wireshark.org/download.html)
 - TShark Installed. (Included with Wireshark on Windows)
-- Various Python Modules Installed (pip3 install module_name):
-    - pyserial
+- Python Modules Installed (pip3 install module_name):
     - PySimpleGUI
     - pyshark
+    - plotly
+    - networkx
+    - numpy
+    - pandas
+
 ## Live Capture Requirements
 - Bluefruit LE Sniffer. (found at https://www.adafruit.com/product/2269)
 
@@ -19,7 +23,8 @@ This repository is for my Honours Project at Edinburgh Napier University for Cyb
 - Install Wireshark + TShark.
 - Run "Bluetooth Analyser.py" with Python 3 ("py Bluetooth Analyser.py" in Powershell)
 - Press "Import PCAP" and select the file you wish to import.
-- Click various packets to discover more information regarding their data and structure.
+- Click a packet to discover more information regarding the data and structure.
+- Clicking the advertising data allows you to analyse the data entries for that advertising packet.
 
 ## Live Capture
 - Install Wireshark + TShark.
