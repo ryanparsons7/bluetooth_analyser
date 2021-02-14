@@ -22,7 +22,7 @@ import pandas as pd # Importing pandas for graphs
 import numpy as np # Importing numpy for graphs
 import networkx as nx # Importing networkx for graphs
 import matplotlib.pyplot as plt # Importing pyplot for graphs
-from collections import Counter
+from collections import Counter # Importing
 from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
 import plotly.graph_objs as go
 
@@ -611,6 +611,9 @@ def LiveCapture():
                 if not os.path.isfile(install_location):
                     sg.popup_error('The Wireshark Executable is not located at the default location. Please navigate and select the "Wireshark.exe".', icon='icons/bluetooth.ico')
                     install_location = sg.popup_get_file('Choose Wireshark.exe', icon='icons/bluetooth.ico')
+                if install_location is None:
+                    CaptureWindow.close()
+                    break
                 ext_cap_folder = install_location.removesuffix('Wireshark.exe') + 'extcap'
                 if not os.path.isdir(f'{ext_cap_folder}\\SnifferAPI'):
                     sg.popup_error('The Sniffer API is not installed correctly, please follow the installation guide.".', icon='icons/bluetooth.ico')
