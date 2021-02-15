@@ -22,9 +22,9 @@ import pandas as pd # Importing pandas for graphs
 import numpy as np # Importing numpy for graphs
 import networkx as nx # Importing networkx for graphs
 import matplotlib.pyplot as plt # Importing pyplot for graphs
-from collections import Counter # Importing
-from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
-import plotly.graph_objs as go
+from collections import Counter # Importing collections counter.
+from plotly.offline import download_plotlyjs, init_notebook_mode, iplot # Importing plotly sections for network graph
+import plotly.graph_objs as go # Importing plotly sections for network graph
 
 sg.theme('BlueMono')	# Theme choice, blue because of Bluetooth!
 
@@ -35,7 +35,7 @@ def readKeyValues(inputCsvFile):
     read = csv.reader(infile) # Read file variable
 	
     returnDictionary = {} # Empty dictionary to store future data
-    #for each row
+    # for each row
     for row in read: # For every row in the spreadsheet
     	key   = row[0] # The key is the first row
     	value = row[1] # The value is the second row
@@ -97,15 +97,15 @@ def ImportPCAP(*pcap_file_location):
     """ Opens the importing popup window for the user, allowing them to select a file. Once a file is selected, it is checked to see if it has the correct
         file extensions and if it contains any BTLE headers. Will return the file location of a working file that was selected. """
 
-    if  pcap_file_location == ():
+    if pcap_file_location == (): # If the pcap file location is empty, there is no temp file being used.
         pcap_file_location = GetFileLocation() # Get the file location that the user selects
-    else:
-        pcap_file_location = pcap_file_location[0]
-    if not (pcap_file_location == None or pcap_file_location == ''):
+    else: # If their is a file location passed through
+        pcap_file_location = pcap_file_location[0] # Get the file location from the variable.
+    if not (pcap_file_location == None or pcap_file_location == ''): #  Check to make sure the file location isn't an empty string or is a none.
         cap = pyshark.FileCapture(pcap_file_location, use_json=True) # Get the capture from the file into a variable and use JSON format instead
-        if CheckForBLE(cap):
+        if CheckForBLE(cap): # Check the capture for BLE packets
             print(f'Bluetooth packets found in {pcap_file_location}, continuing') # File contains Bluetooth packets, will now continue to parse
-            capture_dict = ParseBluetoothPCAP(cap)
+            capture_dict = ParseBluetoothPCAP(cap) # Parse the capture and put parsed data into a variable.
         else:
             sg.popup_error(f'No Bluetooth LE packets found in {pcap_file_location}, please import another file.', title=None, icon='icons/bluetooth.ico') # File doesn't contain Bluetooth LE packets, informs user to use another file.
     else:
@@ -148,6 +148,7 @@ def createDir(folder_path):
 def GetAdvertisingDataType(type_hex):
     """ Takes in the advertising entry type in hex and outputs a string of the type. """
 
+    # Dictionary for advertising data types
     type_dict = {
         '0x1': 'Flags',
         '0x2': 'Incomplete List of 16-bit Service Class UUIDs',
@@ -196,20 +197,21 @@ def GetAdvertisingDataType(type_hex):
         '0xff': 'Manufacturer Specific Data'
     }
 
-    return type_dict[type_hex]
+    return type_dict[type_hex] # Return the correct data type name to the calling code
 
 
 def PacketDetailsPopup(packet_number, capture_dict_array):
     """ Takes in a packet number and capure information in the form of a array of dictionaries when the user clicks on a specific packet.
         This will then create a window containing the information regarding that packet """
 
-    packet_number = int(packet_number) - 1
+    packet_number = int(packet_number) - 1 # Because the packet number is starting at 0, increase it by one to start at 1.
 
-    if capture_dict_array[packet_number].get("Advertising Data") == 'N/A':
-        advertising_data_string = 'N/A'
-    else:
-        advertising_data_string = 'Click for more info'
+    if capture_dict_array[packet_number].get("Advertising Data") == 'N/A': # If the packet doesn't have advertising data
+        advertising_data_string = 'N/A' # Get the advertising data string to N/A
+    else: 
+        advertising_data_string = 'Click for more info' # Else set a string so the user can select it to view the data
 
+    # Array containing packet details taken from capture
     packet_detail_list = [
         f'Packet Number: {packet_number + 1}',
         f'Advertising Address: {capture_dict_array[packet_number].get("Advertising Address")}',
@@ -221,28 +223,31 @@ def PacketDetailsPopup(packet_number, capture_dict_array):
         f'Company: {capture_dict_array[packet_number].get("Company")}',
         f'Advertising Data: {advertising_data_string}']
 
-    layout2 = [[sg.Listbox(packet_detail_list, size=(60, 29), enable_events=True, font="TkFixedFont", key='PacketDetails')],       # note must create a layout from scratch every time. No reuse
+    # Create the new layout from scratch
+    layout2 = [[sg.Listbox(packet_detail_list, size=(60, 29), enable_events=True, font="TkFixedFont", key='PacketDetails')],
                 [sg.Button('Exit')]]
 
-    PacketDetailsWindow = sg.Window('Packet Details', layout2, modal=True, icon='icons/bluetooth.ico')
+    PacketDetailsWindow = sg.Window('Packet Details', layout2, modal=True, icon='icons/bluetooth.ico') # Create window
+
+    # While true loop to capture events and values
     while True:
-        event2, values2 = PacketDetailsWindow.read()
-        if event2 == sg.WIN_CLOSED or event2 == 'Exit':
-            PacketDetailsWindow.close()
-            break
-        if event2 == 'PacketDetails':
-            packet_detail = values2["PacketDetails"][0]
-            if packet_detail.startswith('Advertising Data:'):
-                if not packet_detail.startswith('Advertising Data: N/A'):
-                    ExpandedAdvertisingDataPopup(capture_dict_array[packet_number].get("Advertising Data"), capture_dict_array[packet_number].get("Packet Type"))
+        event2, values2 = PacketDetailsWindow.read() # Get events and values from the reading of the window
+        if event2 == sg.WIN_CLOSED or event2 == 'Exit': # If the user closes the window or presses Exit
+            PacketDetailsWindow.close() # Close the window
+            break # and break the loop
+        if event2 == 'PacketDetails': # If the user clicks on an item in the list box
+            packet_detail = values2["PacketDetails"][0] # Get what they clicked on
+            if packet_detail.startswith('Advertising Data:'): # If the item starts with advertising data
+                if not packet_detail.startswith('Advertising Data: N/A'): # and the item isn't an empty advertising data entry
+                    ExpandedAdvertisingDataPopup(capture_dict_array[packet_number].get("Advertising Data"), capture_dict_array[packet_number].get("Packet Type")) # Call the advertising data window function to show the user the advertising info
             else:
-                ExpandedPacketDetails(packet_detail)
+                ExpandedPacketDetails(packet_detail) # Else just show the regular expanded packet details window via the function
 
 def ExpandedAdvertisingDataPopup(advert_data, packet_type):
     """ This function runs whenever the user presses on the advertising data section to see more information.
     The function will then take in the packet type and advertising data, determine what format the data will be stored in and display it to user. """
 
-    
+    # A dictionary for details regarding different entry data points
     expanded_advertising_detail_list = { 
         'Length': 'This value indicates how long the entry is in bytes.',
         'UUID 16': 'The universally unique identifier (UUID) is a ID that is allocated to a specific group or company.',
@@ -257,30 +262,33 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
         'BREDR Not Supported': 'Indicates that the device does not support BR/EDR (Enhanced Data Rate)'
         }
 
-    entries = []
-    entry_length = 1
+    entries = [] # Set entries to an empty list
+    entry_length = 1 # Set the default entry length to 1
 
-    if type(advert_data.entry) == pyshark.packet.layer.JsonLayer:
-        entries.append(f'Entry 1: {GetAdvertisingDataType(hex(int(advert_data.entry.type)))}')  
-    else:
-        entry_length = 0
-        for idx, entry in enumerate(advert_data.entry):
-            print(f'Entry {idx + 1}:\n{entry}')
-            entries.append(f'Entry {idx + 1}: {GetAdvertisingDataType(hex(int(advert_data.entry[idx].type)))}')
-            entry_length = entry_length + 1
+    if type(advert_data.entry) == pyshark.packet.layer.JsonLayer: # if the entry is of type jsonlayer, it means its only 1 entry and not a list of entries
+        entries.append(f'Entry 1: {GetAdvertisingDataType(hex(int(advert_data.entry.type)))}') # Because of this, list it as the only entry, entry 1, with the type named
+    else: # if their is more than 1 entry
+        entry_length = 0 # Set the entry length to 0
+        for idx, entry in enumerate(advert_data.entry): # enumerate through the entries
+            print(f'Entry {idx + 1}:\n{entry}') # Print what entry is found for debug purposes
+            entries.append(f'Entry {idx + 1}: {GetAdvertisingDataType(hex(int(advert_data.entry[idx].type)))}') # Append the entry to the entries list with the entry number and the type name
+            entry_length = entry_length + 1 # increment the entry length
 
-    print(f'Number of Entries: {entry_length}')
+    print(f'Number of Entries: {entry_length}') # After going through all entries, print the number of entries
     
-    layout3 = [[sg.Listbox(entries, size=(100, 20), enable_events=True, font="TkFixedFont", key='AdvertDetails')],       # note must create a layout from scratch every time. No reuse
+    # Create layout for new window from scratch
+    layout3 = [[sg.Listbox(entries, size=(100, 20), enable_events=True, font="TkFixedFont", key='AdvertDetails')],
                 [sg.Button('Exit')]]
 
-    AdvertisingDataDetailsWindow = sg.Window('Advertising Data Details', layout3, modal=True, icon='icons/bluetooth.ico')
+    AdvertisingDataDetailsWindow = sg.Window('Advertising Data Details', layout3, modal=True, icon='icons/bluetooth.ico') # Create window from layout
+
+    # While true loop to catch events and values
     while True:
-        event3, values3 = AdvertisingDataDetailsWindow.read()
+        event3, values3 = AdvertisingDataDetailsWindow.read() # Get events and values to variables
         print(event3, values3) # Print any values or events that get produced
-        if event3 == sg.WIN_CLOSED or event3 == 'Exit':
-            AdvertisingDataDetailsWindow.close()
-            break
+        if event3 == sg.WIN_CLOSED or event3 == 'Exit': # If the user closes the window or presses Exit
+            AdvertisingDataDetailsWindow.close() # Close the window
+            break # and break the true loop
         if event3 == 'AdvertDetails':
             if values3["AdvertDetails"][0] == '< Back':
                 AdvertisingDataDetailsWindow.FindElement('AdvertDetails').Update(values=entries)
