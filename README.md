@@ -6,8 +6,8 @@ This repository is for my Honours Project at Edinburgh Napier University for Cyb
 - Windows 10.
 - Python 3 Installed. (https://www.python.org/downloads/)
 - Wireshark Installed. (https://www.wireshark.org/download.html)
-- TShark Installed. (Included with Wireshark on Windows)
-- Python Modules Installed (pip3 install module_name):
+- TShark Installed. (Installed by default during Wireshark installation)
+- Python Modules Installed:
     - PySimpleGUI
     - pyshark
     - plotly
@@ -19,6 +19,15 @@ This repository is for my Honours Project at Edinburgh Napier University for Cyb
 - Bluefruit LE Sniffer. (found at https://www.adafruit.com/product/2269)
 
 # Instructions
+
+## Installation
+- Download project zip by going to Code > Download ZIP
+- Extract the ZIP to a new folder.
+- Install Python 3 from https://www.python.org/downloads/, use default configuration.
+- Install Wireshark, keep default settings and ensure TShark gets installed.
+- Install the modules from the basic requirements list by using the command "pip3 install **module_name**" in either PowerShell or CMD
+- Launch the Application by running "py Bluetooth Analyser.py" in PowerShell or CMD from within the "bluetooth_analyser" folder.<br>I recommend you do this by first deselecting any items in the folder, **Shift + Right Clicking** an empty area of the folder and selecting "Open PowerShell window here". This will open a PowerShell window within the directory.
+
 ## Packet Analysis
 - Install Wireshark + TShark.
 - Run "Bluetooth Analyser.py" with Python 3 ("py Bluetooth Analyser.py" in Powershell)
