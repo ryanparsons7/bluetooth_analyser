@@ -289,9 +289,10 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
         if event3 == sg.WIN_CLOSED or event3 == 'Exit': # If the user closes the window or presses Exit
             AdvertisingDataDetailsWindow.close() # Close the window
             break # and break the true loop
-        if event3 == 'AdvertDetails':
-            if values3["AdvertDetails"][0] == '< Back':
-                AdvertisingDataDetailsWindow.FindElement('AdvertDetails').Update(values=entries)
+        if event3 == 'AdvertDetails': # If the user clicks on a item within the window list
+            if values3["AdvertDetails"][0] == '< Back': # If the the item is the back button
+                AdvertisingDataDetailsWindow.FindElement('AdvertDetails').Update(values=entries) # reload the list with the original entries listing
+            # if the item selected starts with a specific string, show a popup that details what that detail means to the user.
             elif values3["AdvertDetails"][0].startswith('Length'):
                 sg.popup(expanded_advertising_detail_list['Length'], title='Length', keep_on_top=True, icon='icons/bluetooth.ico')
             elif values3["AdvertDetails"][0].startswith('UUID 16'):
@@ -314,45 +315,51 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
                 sg.popup(expanded_advertising_detail_list['BREDR Not Supported'], title='BREDR Not Supported', keep_on_top=True, icon='icons/bluetooth.ico')
             elif values3["AdvertDetails"][0].startswith('Company ID'):
                 sg.popup(expanded_advertising_detail_list['Company ID'], title='Company ID', keep_on_top=True, icon='icons/bluetooth.ico')
+            
+            # If the item starts with entry, it means the user has selected one of the entries in the list
             elif values3["AdvertDetails"][0].startswith('Entry'):
-                entry_number = int(values3["AdvertDetails"][0][6:7])
-                print(entry_number)
-                new_list = ['< Back']
+                entry_number = int(values3["AdvertDetails"][0][6:7]) # Get the entry number
+                print(entry_number) # Print it for debug purposes
+                new_list = ['< Back'] # Create a new list with the back button as the first value
+
+                # If the packet type is ADV_SCAN_IND
                 if packet_type == 'ADV_SCAN_IND':
                     try:
-                        test_var = advert_data.entry[1].service_data
-                        ADV_SCAN_IND_Type = 1
+                        test_var = advert_data.entry[1].service_data # See if the packet type is the first of the 2 sub-types
+                        ADV_SCAN_IND_Type = 1 # if the above line works, it will confirm type 1
                     except AttributeError:
-                        ADV_SCAN_IND_Type = 2
-                    if ADV_SCAN_IND_Type == 1:
-                        if entry_number == 1:
+                        ADV_SCAN_IND_Type = 2 # otherwise, set type 2
+                    if ADV_SCAN_IND_Type == 1: # If the sub-type is 1, add the details to the displayed list for that sub-type
+                        if entry_number == 1: # If the entry number equals 1, append the correct details
                             new_list.append(f'Length: {advert_data.entry[0].length}')
                             new_list.append(f'UUID 16: {hex(int(advert_data.entry[0].uuid_16))}')
                             new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
-                        if entry_number == 2:
+                        if entry_number == 2: # If the entry number equals 2, append the correct details
                             new_list.append(f'Length: {advert_data.entry[1].length}')
                             new_list.append(f'UUID 16: {hex(int(advert_data.entry[1].uuid_16))}')
                             new_list.append(f'Service Data: {advert_data.entry[1].service_data}')
                             new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
-                    if ADV_SCAN_IND_Type == 2:
-                        if entry_number == 1:
+
+                    if ADV_SCAN_IND_Type == 2: # If the sub-type is 2, add the details to the displayed list for that sub-type
+                        if entry_number == 1: # If the entry number equals 1, append the correct details
                             new_list.append(f'Length: {advert_data.entry[0].length}')
                             new_list.append(f'UUID 16: {hex(int(advert_data.entry[0].uuid_16))}')
                             new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
-                        if entry_number == 2:
+                        if entry_number == 2: # If the entry number equals 2, append the correct details
                             new_list.append(f'Length: {advert_data.entry[1].length}')
                             new_list.append(f'UUID 16: {hex(int(advert_data.entry[1].uuid_16))}')
                             new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
                     
+                # If the packet type is ADV_IND
                 if packet_type == 'ADV_IND':
-                    if entry_length == 3:
+                    if entry_length == 3: # if the amount of entries equal 3
                         try:
-                            test_var = advert_data.entry[0].le_general_discoverable_mode
-                            ADV_IND_Type = 1
+                            test_var = advert_data.entry[0].le_general_discoverable_mode # See if the packet is the first of the 2 sub-types for this length
+                            ADV_IND_Type = 1 # If the above line works, set the sub-type as 1
                         except AttributeError:
-                            ADV_IND_Type = 2
-                        if ADV_IND_Type == 1:
-                            if entry_number == 1:
+                            ADV_IND_Type = 2 # else set sub-type of 2
+                        if ADV_IND_Type == 1: # If the sub-type is 1, add the details to the displayed list for that sub-type
+                            if entry_number == 1: # If the entry number equals 1, append the correct details
                                 new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
                                 new_list.append(f'Low Energy Limited Discoverable Mode: {advert_data.entry[0].le_limited_discoverable_mode}')
                                 new_list.append(f'Length: {advert_data.entry[0].length}')
@@ -360,35 +367,35 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
                                 new_list.append(f'Low Energy BREDR Support Host: {advert_data.entry[0].le_bredr_support_host}')
                                 new_list.append(f'Low Energy BREDR Support Controller: {advert_data.entry[0].le_bredr_support_controller}')
                                 new_list.append(f'BREDR Not Supported: {advert_data.entry[0].bredr_not_supported}')
-                            if entry_number == 2:
+                            if entry_number == 2: # If the entry number equals 2, append the correct details
                                 new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
                                 new_list.append(f'Power Level: {advert_data.entry[1].power_level}')
                                 new_list.append(f'Length: {advert_data.entry[1].length}')
-                            if entry_number == 3:
+                            if entry_number == 3: # If the entry number equals 3, append the correct details
                                 new_list.append(f'Length: {advert_data.entry[2].length}')
                                 new_list.append(f'Data: {advert_data.entry[2].data}')
                                 new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[2].type)))}')
                                 new_list.append(f'Company ID: {advert_data.entry[2].company_id}')
-                        elif ADV_IND_Type == 2:
-                            if entry_number == 1:
+                        elif ADV_IND_Type == 2: # If the sub-type is 2, add the details to the displayed list for that sub-type
+                            if entry_number == 1: # If the entry number equals 1, append the correct details
                                 new_list.append(f'Device Name: {advert_data.entry[0].device_name}')
                                 new_list.append(f'Length: {advert_data.entry[0].length}')
                                 new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[0].type)))}')
-                            if entry_number == 2:
+                            if entry_number == 2: # If the entry number equals 2, append the correct details
                                 new_list.append(f'Length: {advert_data.entry[1].length}')
                                 new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
-                            if entry_number == 3:
+                            if entry_number == 3: # If the entry number equals 3, append the correct details
                                 new_list.append(f'SSP OOB Length: {advert_data.entry[2].ssp_oob_length}')
                                 new_list.append(f'Length: {advert_data.entry[2].length}')
                                 new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[2].type)))}')
-                    elif entry_length == 2:
+                    elif entry_length == 2:  # if the amount of entries equal 2
                         try:
-                            test_var = advert_data.entry[1].data
-                            ADV_IND_Type = 1
+                            test_var = advert_data.entry[1].data # See if the packet is the first of the 2 sub-types for this length
+                            ADV_IND_Type = 1 # If the above line works, set the sub-type as 1
                         except AttributeError:
-                            ADV_IND_Type = 2
-                        if ADV_IND_Type == 1:
-                            if entry_number == 1:
+                            ADV_IND_Type = 2 # else set sub-type of 2
+                        if ADV_IND_Type == 1: # If the sub-type is 1, add the details to the displayed list for that sub-type
+                            if entry_number == 1: # If the entry number equals 1, append the correct details
                                 new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
                                 new_list.append(f'Low Energy Limited Discoverable Mode: {advert_data.entry[0].le_limited_discoverable_mode}')
                                 new_list.append(f'Length: {advert_data.entry[0].length}')
@@ -396,16 +403,16 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
                                 new_list.append(f'Low Energy BREDR Support Host: {advert_data.entry[0].le_bredr_support_host}')
                                 new_list.append(f'Low Energy BREDR Support Controller: {advert_data.entry[0].le_bredr_support_controller}')
                                 new_list.append(f'BREDR Not Supported: {advert_data.entry[0].bredr_not_supported}')
-                            if entry_number == 2:
+                            if entry_number == 2: # If the entry number equals 2, append the correct details
                                 new_list.append(f'Length: {advert_data.entry[1].length}')
                                 try:
-                                    new_list.append(f'Data: {advert_data.entry[1].data}')
+                                    new_list.append(f'Data: {advert_data.entry[1].data}') # Try to get this data
                                 except Exception:
-                                    print('No data field, skipping field')
+                                    print('No data field, skipping field') # If it fails, just skip it and print an error to log
                                 new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
                                 new_list.append(f'Company ID: {advert_data.entry[1].company_id}')                 
-                        if ADV_IND_Type == 2:
-                            if entry_number == 1:
+                        if ADV_IND_Type == 2: # If the sub-type is 2, add the details to the displayed list for that sub-type
+                            if entry_number == 1: # If the entry number equals 1, append the correct details
                                 new_list.append(f'Low Energy General Discoverable Mode: {advert_data.entry[0].le_general_discoverable_mode}')
                                 new_list.append(f'Low Energy Limited Discoverable Mode: {advert_data.entry[0].le_limited_discoverable_mode}')
                                 new_list.append(f'Length: {advert_data.entry[0].length}')
@@ -413,16 +420,19 @@ def ExpandedAdvertisingDataPopup(advert_data, packet_type):
                                 new_list.append(f'Low Energy BREDR Support Host: {advert_data.entry[0].le_bredr_support_host}')
                                 new_list.append(f'Low Energy BREDR Support Controller: {advert_data.entry[0].le_bredr_support_controller}')
                                 new_list.append(f'BREDR Not Supported: {advert_data.entry[0].bredr_not_supported}')
-                            if entry_number == 2:
+                            if entry_number == 2: # If the entry number equals 2, append the correct details
                                 new_list.append(f'Length: {advert_data.entry[1].length}')
                                 new_list.append(f'UUID 16: {advert_data.entry[1].uuid_16}')
                                 new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry[1].type)))}')
 
+                # If the packet type is ADV_NONCONN_IND, append the related details to the list
                 if packet_type == 'ADV_NONCONN_IND':
                     new_list.append(f'Company ID: {advert_data.entry.company_id}')
                     new_list.append(f'Data: {advert_data.entry.data}')
                     new_list.append(f'Length: {advert_data.entry.length}')
                     new_list.append(f'Type: {GetAdvertisingDataType(hex(int(advert_data.entry.type)))}')
+
+                # When the correct details have been appended to the list, update the window list box
                 AdvertisingDataDetailsWindow.FindElement('AdvertDetails').Update(values=new_list)
 
 def ExpandedPacketDetails(detail):
@@ -462,34 +472,34 @@ def ExpandedPacketDetails(detail):
 def PopulateUniqueDevicesList(capture_dict):
     """ Function that takes in the capture details and populates the unique devices list """
 
-    AuxList = []
-    for packet in capture_dict:
-        AdvertisingAddress = packet.get("Advertising Address")
-        ScanningAddress = packet.get("Scanning Address")
-        if AdvertisingAddress not in AuxList and not AdvertisingAddress == 'N/A':
-            AuxList.append(AdvertisingAddress)
-        if ScanningAddress not in AuxList and not ScanningAddress == 'N/A':
-            AuxList.append(ScanningAddress)
-    MainWindow.FindElement('DeviceListBox').Update(values=AuxList)
-    AddrFilterList = AuxList
-    AddrFilterList.insert(0, 'Any')
-    MainWindow.FindElement('AddrFilter').Update(values=AddrFilterList)
+    AuxList = [] # Set an empty array
+    for packet in capture_dict: # For every packet in the capture
+        AdvertisingAddress = packet.get("Advertising Address") # Get the advertising address
+        ScanningAddress = packet.get("Scanning Address") # Get the scanning address
+        if AdvertisingAddress not in AuxList and not AdvertisingAddress == 'N/A': # If the advertising address is not already in the aux list and it's not N/A
+            AuxList.append(AdvertisingAddress) # append it to the aux list
+        if ScanningAddress not in AuxList and not ScanningAddress == 'N/A': # If the scanning address is not already in the aux list and it's not N/A
+            AuxList.append(ScanningAddress) # append it to the aux list
+    MainWindow.FindElement('DeviceListBox').Update(values=AuxList) # Update the unique device list element with the new device list
+    AddrFilterList = AuxList # Add the unique device list to the address filter list variable
+    AddrFilterList.insert(0, 'Any') # Add the Any option to the top of the list
+    MainWindow.FindElement('AddrFilter').Update(values=AddrFilterList) # Update the filter list with the new device list
 
 def PopulateUniqueConnectionsList(capture_dict):
     """ Function that takes in the capture details and populates the unique connections list """
 
-    AuxList = []
-    for packet in capture_dict:
-        AdvertisingAddress = packet.get("Advertising Address")
-        ScanningAddress = packet.get("Scanning Address")
-        if AdvertisingAddress != 'N/A' and ScanningAddress != 'N/A':
-            if packet.get("Packet Type") == 'SCAN_REQ':
-                connection = f'{ScanningAddress} -> {AdvertisingAddress}'
+    AuxList = [] # Set an empty array
+    for packet in capture_dict: # For every packet in the capture
+        AdvertisingAddress = packet.get("Advertising Address") # Get the advertising address
+        ScanningAddress = packet.get("Scanning Address") # Get the scanning address
+        if AdvertisingAddress != 'N/A' and ScanningAddress != 'N/A': # If the advertising address and scanning address are both not N/A
+            if packet.get("Packet Type") == 'SCAN_REQ': # If the packet type is SCAN_REQ
+                connection = f'{ScanningAddress} -> {AdvertisingAddress}' # The connection goes from scanning address to advertising address
             else:
-                connection = f'{AdvertisingAddress} -> {ScanningAddress}'
-            if connection not in AuxList:
-                AuxList.append(connection)
-    MainWindow.FindElement('ConnectionsListBox').Update(values=AuxList)
+                connection = f'{AdvertisingAddress} -> {ScanningAddress}' # Otherwise, it goes the other way around
+            if connection not in AuxList: # If the connection formed is not in the aux list
+                AuxList.append(connection) # append it, this avoids duplicates
+    MainWindow.FindElement('ConnectionsListBox').Update(values=AuxList) # Now update the unique connections window with the unique connections list
 
 def PopulatePacketList(capture_dict):
     """ Function that takes in the capture details and populates the packet list """
@@ -514,7 +524,7 @@ def ParseBluetoothPCAP(capture):
         '0x00000006': 'ADV_SCAN_IND'
     }
 
-    company_dict = readKeyValues('data/com.csv')
+    company_dict = readKeyValues('data/com.csv') # read key values from the spreadsheet and place into variable
 
     for packet in capture:
         # Define empty dictionary for the packet, to fill in details later
@@ -592,53 +602,57 @@ def ParseBluetoothPCAP(capture):
         
         packet_number = packet_number + 1 # Increment the packet number before processing the next packet
         parsed_dict.append(packet_information) # Append the dictionary to the array
-    return parsed_dict
+    return parsed_dict # Return the final parsed capture
 
 def LiveCapture():
     """ When the function is ran, a window is displayed to the user that allows them to configure live capture parameters and start a live capture """
     
+    # Create a layout for the live capture window
     live_capture_layout = [
             [sg.Text('Please select your parameters and click the Capture button to start')],
             [sg.Text('Capture time in seconds'), sg.InputText()],
             [sg.Button('Capture'), sg.Button('Exit')]
     ]
-
+    
+    # Create new window using the layout above
     CaptureWindow = sg.Window('Live Capture', live_capture_layout, modal=True, icon='icons/bluetooth.ico')
+
+    # Start event and values true loop to capture user events
     while True:
-        event2, values2 = CaptureWindow.read()
-        if event2 == sg.WIN_CLOSED or event2 == 'Exit':
-            CaptureWindow.close()
-            break
-        if event2 == 'Capture':
-            if not values2[0] == '' and values2[0].isnumeric():
-                current_folder = pathlib.Path(__file__).parent.absolute()
-                timer = float(values2[0])
-                print('Windows OS Being Used')
-                arguments = f'-i COM3 -k -w "{current_folder}\\temp\\temp_capture.pcapng" -a duration:{timer}'
-                install_location = 'C:\\Program Files\\Wireshark\\Wireshark.exe'
-                if not os.path.isfile(install_location):
-                    sg.popup_error('The Wireshark Executable is not located at the default location. Please navigate and select the "Wireshark.exe".', icon='icons/bluetooth.ico')
-                    install_location = sg.popup_get_file('Choose Wireshark.exe', icon='icons/bluetooth.ico')
-                if install_location is None:
-                    CaptureWindow.close()
-                    break
-                ext_cap_folder = install_location.removesuffix('Wireshark.exe') + 'extcap'
-                if not os.path.isdir(f'{ext_cap_folder}\\SnifferAPI'):
-                    sg.popup_error('The Sniffer API is not installed correctly, please follow the installation guide.".', icon='icons/bluetooth.ico')
-                    CaptureWindow.close()
-                    break
-                wireshark_proc = subprocess.Popen(f'{install_location} {arguments}')
-                time.sleep(timer + 10)
-                wireshark_proc.kill()
-                CaptureWindow.close()
-                temp_file = f'{current_folder}\\temp\\temp_capture.pcapng'
-                if not os.path.isfile(temp_file):
+        event2, values2 = CaptureWindow.read() # Capture any user events into events and values
+        if event2 == sg.WIN_CLOSED or event2 == 'Exit': # If the user closes the window or presses exit
+            CaptureWindow.close() # Close the window 
+            break # and break the true loop
+        if event2 == 'Capture': # If the user presses capture
+            if not values2[0] == '' and values2[0].isnumeric(): # If the user enters something that is numeric only
+                current_folder = pathlib.Path(__file__).parent.absolute() # Get the current folder of the application
+                timer = float(values2[0]) # Get the user set number from the values capture
+                arguments = f'-i COM3 -k -w "{current_folder}\\temp\\temp_capture.pcapng" -a duration:{timer}' # Set the arguments for the Wireshark application
+                install_location = 'C:\\Program Files\\Wireshark\\Wireshark.exe' # Default location for Wireshark
+                if not os.path.isfile(install_location): # If Wireshark isn't installed in the default location
+                    sg.popup_error('The Wireshark Executable is not located at the default location. Please navigate and select the "Wireshark.exe".', icon='icons/bluetooth.ico') # Inform the user about Wireshark not being the default location
+                    install_location = sg.popup_get_file('Choose Wireshark.exe', icon='icons/bluetooth.ico') # Get the user to select the Wireshark executable in the true installation folder
+                if install_location is None: # If the user closes the file selector popup
+                    CaptureWindow.close() # exit out of the window
+                    break # and break the true loop
+                ext_cap_folder = install_location.removesuffix('Wireshark.exe') + 'extcap' # Set the folder for the extcap installation
+                if not os.path.isdir(f'{ext_cap_folder}\\SnifferAPI'): # If the folder for the sniffer API does not exist
+                    sg.popup_error('The Sniffer API is not installed correctly, please follow the installation guide.".', icon='icons/bluetooth.ico') # Inform the user the API isn't installed correctly
+                    CaptureWindow.close() # close the window
+                    break # and break the true loop
+                wireshark_proc = subprocess.Popen(f'{install_location} {arguments}') # Open Wireshark with the arguments
+                time.sleep(timer + 10) # Wait for the capture to finish with 10 seconds on top of that to account for loading times
+                wireshark_proc.kill() # Kill Wireshark process
+                CaptureWindow.close() # Close the capture window
+                temp_file = f'{current_folder}\\temp\\temp_capture.pcapng' # Set a string for the location of the temp file
+                if not os.path.isfile(temp_file): # if the temp file that Wireshark outputted doesn't exist
+                    # Inform the user the capture failed for some reason and break the true loop
                     sg.popup_error('The capture file from Wireshark was not created, this may be due to the sniffer not being connected properly. Please read any error messages that appear in the Wireshark application when it opens.', icon='icons/bluetooth.ico')
                     break
-                ImportPCAP(temp_file)
-                break
-            else:
-                sg.popup_error('Please enter a number.', icon='icons/bluetooth.ico')
+                ImportPCAP(temp_file) # if the capture goes successfully, import the capture from the temporary location
+                break # and break the true loop
+            else: # If the user didn't enter a number
+                sg.popup_error('Please enter a number.', icon='icons/bluetooth.ico') # Inform the user via a popup
 
 def ExportPCAP():
     """ Checks if the temporary capture file exist and if it does, it will copy it to the file that the user selects """
@@ -658,15 +672,15 @@ def ExportPCAP():
 def ApplyFilter(capture_dict, type_filter, address_filter):
     """ Applies filters to the capture dictionary and resubmits it to the displays """
     
-    new_capture = []
-    for packet in capture_dict:
-        match = True
-        if packet['Packet Type'] != type_filter and type_filter != 'Any':
-            match = False
-        if (packet['Advertising Address'] != address_filter and packet['Scanning Address'] != address_filter) and address_filter != 'Any':
-            match = False
-        if match == True:
-            new_capture.append(packet)
+    new_capture = [] # Set empty array
+    for packet in capture_dict: # For every packet in the capture
+        match = True # Set the match to a default of True
+        if packet['Packet Type'] != type_filter and type_filter != 'Any': # If the packet type doesn't match the type filter selected and the filter also isn't set to Any
+            match = False # Set the match to False
+        if (packet['Advertising Address'] != address_filter and packet['Scanning Address'] != address_filter) and address_filter != 'Any': # If the advertising and scanning address doesn't match the address filter, and the filter isn't set to any
+            match = False # Set the match to False
+        if match == True: # If the packet matches the filter set
+            new_capture.append(packet) # Append the packet to the new capture
     
     if new_capture != None: # Check if the returned capture is not empty, if it has data assigned, continue with the processes.
         PopulatePacketList(new_capture) # Populate packet list
@@ -674,62 +688,70 @@ def ApplyFilter(capture_dict, type_filter, address_filter):
 def NetworkMapInfoGen(capture_dict):
     """ Generates a dictionary of packets with address as the key, and the manufacter as the value """
 
-    device_dict = {}
+    device_dict = {} # Create an empty dictionary for the devices
 
-    for packet in capture_dict:
-        AdvertisingAddress = packet.get("Advertising Address")
-        ScanningAddress = packet.get("Scanning Address")
-        if AdvertisingAddress not in device_dict and not AdvertisingAddress == 'N/A':
-            device_dict[AdvertisingAddress] = 'N/A'
-        if ScanningAddress not in device_dict and not ScanningAddress == 'N/A':
-            device_dict[ScanningAddress] = 'N/A'                
+    for packet in capture_dict: # For every packet in the capture
+        AdvertisingAddress = packet.get("Advertising Address") # Get the advertising address
+        ScanningAddress = packet.get("Scanning Address") # Get the scanning address
+        if AdvertisingAddress not in device_dict and not AdvertisingAddress == 'N/A': # If the advertising address is not in the device dictionary already and isn't N/A
+            device_dict[AdvertisingAddress] = 'N/A' # append it to the dictionary with the value of N/A
+        if ScanningAddress not in device_dict and not ScanningAddress == 'N/A': # If the scanning address is not the in device dictionary already and isn't N/A
+            device_dict[ScanningAddress] = 'N/A' # append it to the dictionary with the value of N/A
 
-    for packet in capture_dict:
-        if packet['Packet Type'] == 'ADV_IND' or packet['Packet Type'] == 'ADV_DIRECT_IND' or packet['Packet Type'] == 'ADV_NONCONN_IND' or packet['Packet Type'] == 'ADV_SCAN_IND':
-            device_dict[packet['Advertising Address']] = packet['Company']
-    return(device_dict)
+    for packet in capture_dict: # For every packet in the capture again
+        if packet['Packet Type'] == 'ADV_IND' or packet['Packet Type'] == 'ADV_DIRECT_IND' or packet['Packet Type'] == 'ADV_NONCONN_IND' or packet['Packet Type'] == 'ADV_SCAN_IND': # If the packet has a type that is used for advertising
+            device_dict[packet['Advertising Address']] = packet['Company'] # Add the company to the value of the key/device
+    return(device_dict) # Return the dictionary
 
 def NetworkMap(capture_dict):
     """ Creates a map of the network from the capture file """
 
-    device_dictionary = NetworkMapInfoGen(capture_dict)
+    device_dictionary = NetworkMapInfoGen(capture_dict) # Get the device dictionary for each unique device on the network along with its company as the value
+
+    # Create some empty arrays for later
     SourceList = []
     DestinationList = []
     StandaloneList = []
 
-    for packet in capture_dict:
-        AdvertisingAddress = packet.get("Advertising Address")
-        ScanningAddress = packet.get("Scanning Address")
-        if AdvertisingAddress != 'N/A' and ScanningAddress != 'N/A':
-            if packet.get("Packet Type") == 'SCAN_REQ':
-                source = ScanningAddress
-                destination = AdvertisingAddress
-            else:
+    for packet in capture_dict: # For every packet in the capture
+        AdvertisingAddress = packet.get("Advertising Address") # Get the advertising address
+        ScanningAddress = packet.get("Scanning Address") # Get the scanning address
+        if AdvertisingAddress != 'N/A' and ScanningAddress != 'N/A': # If the advertising address and scanning address isn't N/A
+            if packet.get("Packet Type") == 'SCAN_REQ': # If the packet type is SCAN_REQ
+                source = ScanningAddress # The source is the scanning address
+                destination = AdvertisingAddress # and the destination is the advertising address
+            else: # Otherwise it's the otherway around
                 destination = ScanningAddress
                 source = AdvertisingAddress
-            SourceList.append(source)
-            DestinationList.append(destination)
+            SourceList.append(source) # Append the source to the source list
+            DestinationList.append(destination) # Append the destination to the destination list
         
+        # If the advertising address is not in the list and isn't N/A, append it. This avoids duplicates
         if AdvertisingAddress not in StandaloneList and not AdvertisingAddress == 'N/A':
             StandaloneList.append(AdvertisingAddress)
         
+        # If the scanning address is not in the list and isn't N/A, append it. This avoids duplicates
         if ScanningAddress not in StandaloneList and not ScanningAddress == 'N/A':
             StandaloneList.append(ScanningAddress)
 
-    G = nx.Graph()
+    G = nx.Graph() # Define networkx graph
 
-    G.add_nodes_from(StandaloneList)
+    G.add_nodes_from(StandaloneList) # Add nodes from the list of unique devices
 
+    # For every device in the source list
     for i in range(len(SourceList)):
-        G.add_edge(SourceList[i], DestinationList[i])
+        G.add_edge(SourceList[i], DestinationList[i]) # add an edge between the source and destination
 
-    pos = nx.spring_layout(G, k=0.5, iterations=50)
+    pos = nx.spring_layout(G, k=0.5, iterations=50) # Set a spring layout of the nodes on the graph
+
+    # For every node, set their position based on the layout above
     for n, p in pos.items():
         G.nodes[n]['pos'] = p
     
+    # Configure the edges based on the nodes they connect to and the positions at each end
     edge_x = []
     edge_y = []
-    for edge in G.edges():
+    for edge in G.edges(): # For every edge in the networkx graph, create the edge in the plotly graph
         x0, y0 = G.nodes[edge[0]]['pos']
         x1, y1 = G.nodes[edge[1]]['pos']
         edge_x.append(x0)
@@ -739,12 +761,14 @@ def NetworkMap(capture_dict):
         edge_y.append(y1)
         edge_y.append(None)
 
+    # Create the edges between nodes
     edge_trace = go.Scatter(
         x=edge_x, y=edge_y,
         line=dict(width=0.5, color='#888'),
         hoverinfo='text',
         mode='lines')
 
+    # Create the nodes
     node_x = []
     node_y = []
     for node in G.nodes():
@@ -752,6 +776,7 @@ def NetworkMap(capture_dict):
         node_x.append(x)
         node_y.append(y)
 
+    # Add the information and metadata for the nodes
     node_trace = go.Scatter(
         x=node_x, y=node_y,
         mode='markers',
@@ -774,15 +799,17 @@ def NetworkMap(capture_dict):
             ),
             line_width=2))
 
+    # Add node adjacencies that also contain the address for the node and company information
     node_adjacencies = []
     node_text = []
     for node, adjacencies in enumerate(G.adjacency()):
         node_adjacencies.append(len(adjacencies[1]))
         node_text.append('Address: ' + adjacencies[0] + '<br>' + str(len(adjacencies[1])) + ' device(s) have sent or recieved packets from this device.' + '<br>' + 'Company Name: ' + str(device_dictionary[adjacencies[0]]))
 
-    node_trace.marker.color = node_adjacencies
-    node_trace.text = node_text
+    node_trace.marker.color = node_adjacencies # Set the colour of the nodes depending on the amount of adjacencies
+    node_trace.text = node_text # Set the text for each node
 
+    # Create the figure for the network graph
     fig = go.Figure(data=[edge_trace, node_trace],
                 layout=go.Layout(
                     title='Bluetooth Capture Network Graph',
@@ -798,7 +825,7 @@ def NetworkMap(capture_dict):
                     xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
                     )
-    fig.show()
+    fig.show() # Show the figure to the user by opening their default browser
 
 # Declaring empty arrays for various pieces of data
 packetlistbox = []
