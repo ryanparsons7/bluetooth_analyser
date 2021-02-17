@@ -916,7 +916,8 @@ def main():
 
     MainWindow.close()
 
-
+# if the application/script is run directly from command line, execute the main function
 if __name__ == "__main__":
     """ This is executed when run from the command line """
+
     main()
