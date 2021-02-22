@@ -2,25 +2,6 @@
 
 This repository is for my Honours Project at Edinburgh Napier University for Cybersecurity and Forensics.
 
-## Basic Requirements
-Required for all functionality except live capture.
-- Windows 10.
-- Python 3 Installed. (https://www.python.org/downloads/)
-- Wireshark Installed. (https://www.wireshark.org/download.html)
-- TShark Installed. (Installed by default during Wireshark installation)
-- Python Modules Installed:
-    - PySimpleGUI
-    - pyshark
-    - plotly
-    - networkx
-    - numpy (Installed with pandas)
-    - pandas
-    - matplotlib
-
-## Live Capture Requirements
-Only required if you want to perform live captures.
-- Bluefruit LE Sniffer. (found at https://www.adafruit.com/product/2269)
-
 # Instructions
 
 ## Basic Installation
@@ -55,3 +36,22 @@ Only required if you want to perform live captures.
 - Press "Capture" and let the application run Wireshark, conduct the capture and automatically close Wireshark.
 - Once the capture is finished and Wireshark closes, the capture will be imported to be analysed as usual.
 - If you wish to export the capture for later analysis, press the "Export PCAP" button and choose a file name and location.
+
+## Basic Requirements
+Required for all functionality except live capture.
+- Windows 10.
+- Python 3 Installed. (https://www.python.org/downloads/)
+- Wireshark Installed. (https://www.wireshark.org/download.html)
+- TShark Installed. (Installed by default during Wireshark installation)
+- Python Modules Installed:
+    - PySimpleGUI
+    - pyshark
+    - plotly
+    - networkx
+    - numpy (Installed with pandas)
+    - pandas
+    - matplotlib
+
+## Live Capture Requirements
+Only required if you want to perform live captures.
+- Bluefruit LE Sniffer. (found at https://www.adafruit.com/product/2269)
