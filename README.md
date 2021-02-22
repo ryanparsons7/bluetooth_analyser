@@ -15,6 +15,7 @@ Required for all functionality except live capture.
     - networkx
     - numpy (Installed with pandas)
     - pandas
+    - matplotlib
 
 ## Live Capture Requirements
 Only required if you want to perform live captures.
@@ -33,6 +34,7 @@ Only required if you want to perform live captures.
   <br>`pip install plotly`
   <br>`pip install networkx`
   <br>`pip install pandas`
+  <br>`pip install matplotlib`
 
 - Launch the Application by running `py Bluetooth_Analyser.py` in PowerShell or Command Line (cmd) from within the "bluetooth_analyser-main" folder.
 <br>I recommend you do this by first deselecting any items in the folder, **Shift + Right Clicking** an empty area of the folder and selecting "Open PowerShell window here". This will open a PowerShell window within the directory.
