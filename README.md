@@ -9,7 +9,7 @@ This repository is for my Honours Project at Edinburgh Napier University for Cyb
 - Extract the contents of the ZIP to a new folder.
 - Install Python 3 from https://www.python.org/downloads/, during installation under "Advanced Options", make sure you tick "Add Python to environment variables.
 - Install Wireshark from https://www.wireshark.org/download.html, keep default settings and make sure "Install TShark" is ticked during install.
-- Install the Python modules by using the command "pip install **module_name**" in either PowerShell or Command Line (cmd)
+- Install the Python modules inputting the following commands below in either PowerShell or Command Line (cmd)
   <br>`pip install PySimpleGUI`
   <br>`pip install pyshark`
   <br>`pip install plotly`
