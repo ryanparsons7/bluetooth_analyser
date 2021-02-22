@@ -34,7 +34,7 @@ Only required if you want to perform live captures.
   <br>`pip install networkx`
   <br>`pip install pandas`
 
-- Launch the Application by running "py Bluetooth Analyser.py" in PowerShell or Command Line (cmd) from within the "bluetooth_analyser-main" folder.
+- Launch the Application by running `py Bluetooth Analyser.py` in PowerShell or Command Line (cmd) from within the "bluetooth_analyser-main" folder.
 <br>I recommend you do this by first deselecting any items in the folder, **Shift + Right Clicking** an empty area of the folder and selecting "Open PowerShell window here". This will open a PowerShell window within the directory.
 
 ## Packet Analysis (Wireshark + TShark must be installed beforehand)
