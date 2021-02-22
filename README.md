@@ -3,6 +3,7 @@
 This repository is for my Honours Project at Edinburgh Napier University for Cybersecurity and Forensics.
 
 ## Basic Requirements
+Required for all functionality except live capture.
 - Windows 10.
 - Python 3 Installed. (https://www.python.org/downloads/)
 - Wireshark Installed. (https://www.wireshark.org/download.html)
@@ -16,17 +17,26 @@ This repository is for my Honours Project at Edinburgh Napier University for Cyb
     - pandas
 
 ## Live Capture Requirements
+Only required if you want to perform live captures.
 - Bluefruit LE Sniffer. (found at https://www.adafruit.com/product/2269)
 
 # Instructions
 
-## Installation
+## Basic Installation
 - Download project zip by going to Code > Download ZIP
 - Extract the contents of the ZIP to a new folder.
 - Install Python 3 from https://www.python.org/downloads/, use default configuration.
-- Install Wireshark, keep default settings and ensure TShark gets installed.
-- Install the modules from the basic requirements list by using the command "pip3 install **module_name**" in either PowerShell or CMD
-- Launch the Application by running "py Bluetooth Analyser.py" in PowerShell or CMD from within the "bluetooth_analyser" folder.<br>I recommend you do this by first deselecting any items in the folder, **Shift + Right Clicking** an empty area of the folder and selecting "Open PowerShell window here". This will open a PowerShell window within the directory.
+- Install Wireshark from https://www.wireshark.org/download.html, keep default settings and make sure "Install TShark" is ticked during install.
+- Install the Python modules by using the command "pip3 install **module_name**" in either PowerShell or Command Line (cmd)
+  <br>`pip3 install PySimpleGUI`
+  <br>`pip3 install pyshark`
+  <br>`pip3 install plotly`
+  <br>`pip3 install networkx`
+  <br>`pip3 install numpy`
+  <br>`pip3 install pandas`
+
+- Launch the Application by running "py Bluetooth Analyser.py" in PowerShell or Command Line (cmd) from within the "bluetooth_analyser" folder.
+<br>I recommend you do this by first deselecting any items in the folder, **Shift + Right Clicking** an empty area of the folder and selecting "Open PowerShell window here". This will open a PowerShell window within the directory.
 
 ## Packet Analysis (Wireshark + TShark must be installed beforehand)
 - Run "Bluetooth Analyser.py" with Python 3 ("py Bluetooth Analyser.py" in Powershell)
