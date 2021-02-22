@@ -27,13 +27,13 @@ Only required if you want to perform live captures.
 - Extract the contents of the ZIP to a new folder.
 - Install Python 3 from https://www.python.org/downloads/, use default configuration.
 - Install Wireshark from https://www.wireshark.org/download.html, keep default settings and make sure "Install TShark" is ticked during install.
-- Install the Python modules by using the command "pip3 install **module_name**" in either PowerShell or Command Line (cmd)
-  <br>`pip3 install PySimpleGUI`
-  <br>`pip3 install pyshark`
-  <br>`pip3 install plotly`
-  <br>`pip3 install networkx`
-  <br>`pip3 install numpy`
-  <br>`pip3 install pandas`
+- Install the Python modules by using the command "python -m pip install **module_name**" in either PowerShell or Command Line (cmd)
+  <br>`python -m pip install PySimpleGUI`
+  <br>`python -m pip install pyshark`
+  <br>`python -m pip install plotly`
+  <br>`python -m pip install networkx`
+  <br>`python -m pip install numpy`
+  <br>`python -m pip install pandas`
 
 - Launch the Application by running "py Bluetooth Analyser.py" in PowerShell or Command Line (cmd) from within the "bluetooth_analyser" folder.
 <br>I recommend you do this by first deselecting any items in the folder, **Shift + Right Clicking** an empty area of the folder and selecting "Open PowerShell window here". This will open a PowerShell window within the directory.
