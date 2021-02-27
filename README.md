@@ -4,7 +4,7 @@ This repository is for my Honours Project at Edinburgh Napier University for Cyb
 
 # Instructions
 
-## Basic Installation
+## Installation
 - Download project zip by going to Code > Download ZIP
 - Extract the contents of the ZIP to a new folder.
 - Install Python 3 from https://www.python.org/downloads/, during installation under "Advanced Options", make sure you tick "Add Python to environment variables.
