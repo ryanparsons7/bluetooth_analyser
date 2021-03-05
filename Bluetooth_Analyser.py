@@ -26,7 +26,11 @@ from collections import Counter # Importing collections counter.
 from plotly.offline import download_plotlyjs, init_notebook_mode, iplot # Importing plotly sections for network graph
 import plotly.graph_objs as go # Importing plotly sections for network graph
 
-sg.theme('BlueMono')	# Theme choice, blue because of Bluetooth!
+file = open("data/theme.conf", "r")
+theme_name = file.read()
+file.close()
+
+sg.theme(theme_name)	# Theme choice, blue because of Bluetooth!
 
 def readKeyValues(inputCsvFile):
     """ A function that takes in a csv file and creates key value pair dictionary from the first and second columns. Code from https://ayeshalshukri.co.uk/category/dev/python-script-to-extract-key-value-pairs-from-csv-file/ """
@@ -506,6 +510,7 @@ def PopulatePacketList(capture_dict):
 
     packetlistbox = AddPacketsToList(capture_dict)
     MainWindow.FindElement('PacketListBox').Update(values=packetlistbox)
+    UpdatePacketCount(len(packetlistbox))
 
 def ParseBluetoothPCAP(capture):
     """ Takes in a capture variable from pyshark and seperates the data down into a arrayed dictionary, returning the dictionary when done """
@@ -637,7 +642,7 @@ def LiveCapture():
                     break # and break the true loop
                 ext_cap_folder = install_location.removesuffix('Wireshark.exe') + 'extcap' # Set the folder for the extcap installation
                 if not os.path.isdir(f'{ext_cap_folder}\\SnifferAPI'): # If the folder for the sniffer API does not exist
-                    sg.popup_error('The Sniffer API is not installed correctly, please follow the installation guide.".', icon='icons/bluetooth.ico') # Inform the user the API isn't installed correctly
+                    sg.popup_error('The Sniffer API is not installed correctly, please follow the installation guide on the GitHub page".', icon='icons/bluetooth.ico') # Inform the user the API isn't installed correctly
                     CaptureWindow.close() # close the window
                     break # and break the true loop
                 wireshark_proc = subprocess.Popen(f'{install_location} {arguments}') # Open Wireshark with the arguments
@@ -702,6 +707,11 @@ def NetworkMapInfoGen(capture_dict):
         if packet['Packet Type'] == 'ADV_IND' or packet['Packet Type'] == 'ADV_DIRECT_IND' or packet['Packet Type'] == 'ADV_NONCONN_IND' or packet['Packet Type'] == 'ADV_SCAN_IND': # If the packet has a type that is used for advertising
             device_dict[packet['Advertising Address']] = packet['Company'] # Add the company to the value of the key/device
     return(device_dict) # Return the dictionary
+
+def UpdatePacketCount(count_num):
+    """ When run, will update the packet count text """
+
+    MainWindow.FindElement('PacketNumberText').Update(f'Number of Packets That Match Filter: {count_num}') # reload the list with the original entries listing
 
 def NetworkMap(capture_dict):
     """ Creates a map of the network from the capture file """
@@ -856,16 +866,17 @@ side_column_layout = [
 
 # The layout of the main window.
 layout = [
-    [sg.Text('Bluetooth Sniffing Application'), sg.Button('Live Capture'), sg.Button('Import PCAP'), sg.Button('Export PCAP'), sg.Button('Network Map'), sg.Button('About')],
-    [sg.Text('Filter | Packet Type:'), sg.Combo(['Any', 'ADV_IND', 'ADV_DIRECT_IND', 'ADV_NONCONN_IND', 'SCAN_REQ', 'SCAN_RSP', 'CONNECT_REQ', 'ADV_SCAN_IND'], key='TypeFilter', default_value='Any', size=(30, 1)), sg.Text('Address:'), sg.Combo(['Any'], key='AddrFilter', default_value='Any', size=(30, 1)), sg.Button('Apply Filter')],
+    [sg.Text('Bluetooth Sniffing Application'), sg.Button('Live Capture'), sg.Button('Import PCAP'), sg.Button('Export PCAP'), sg.Button('Network Map'), sg.Button('About'), sg.Text('Theme:'), sg.Combo(sg.theme_list(), default_value=theme_name, key='Theme'), sg.Button('Update Theme')],
+    [sg.Text('Filter | Packet Type:'), sg.Combo(['Any', 'ADV_IND', 'ADV_DIRECT_IND', 'ADV_NONCONN_IND', 'SCAN_REQ', 'SCAN_RSP', 'CONNECT_REQ', 'ADV_SCAN_IND'], key='TypeFilter', default_value='Any', size=(30, 1)), sg.Text('Address:'), sg.Combo(['Any'], key='AddrFilter', default_value='Any', size=(30, 1)), sg.Button('Apply Filter'), sg.Text('Number of Packets That Match Filter: N/A', key='PacketNumberText')],
     [sg.Frame('Bluetooth Packets', frame_layout_all_packets, font='Any 12', title_color='blue'),
     sg.Column(side_column_layout, justification='r')]
 ]
 
-MainWindow = sg.Window('Bluetooth Sniffing Application', layout, icon='icons/bluetooth.ico') # Main window variable and creation
 
 def main():
     """ Main function and the entry function for the application """
+    
+    MainWindow = sg.Window('Bluetooth Sniffing Application', layout, icon='icons/bluetooth.ico') # Main window variable and creation
 
     if not sys.platform.startswith('win32'): # If the OS running is not Windows
         sg.popup_error('Please run this application on Windows!', icon='icons/bluetooth.ico') # Tell the user that they need to run the app on Windows
@@ -885,6 +896,11 @@ def main():
             break
         if event1 == 'About': # If the user clicks on the About button, open the about popup window
             OpenAboutPopup()
+        if event1 == 'Update Theme': # If the user clicks on the Update Theme button, update the theme
+            file = open("data/theme.conf", "w")
+            file.write(values1['Theme'])
+            file.close()
+            sg.popup('Theme configuration updated, please restart the application.', icon='icons/bluetooth.ico')
         if event1 == 'Live Capture': # If the user clicks on Live Capture, start the live capture function
             LiveCapture()
         if event1 == 'Import PCAP': # If the user clicks on the Import PCAP button, start the ImportPCAP function
