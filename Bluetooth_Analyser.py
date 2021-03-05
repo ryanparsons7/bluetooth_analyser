@@ -210,10 +210,14 @@ def PacketDetailsPopup(packet_number, capture_dict_array):
 
     packet_number = int(packet_number) - 1 # Because the packet number is starting at 0, increase it by one to start at 1.
 
-    if capture_dict_array[packet_number].get("Advertising Data") == 'N/A': # If the packet doesn't have advertising data
-        advertising_data_string = 'N/A' # Get the advertising data string to N/A
-    else: 
-        advertising_data_string = 'Click for more info' # Else set a string so the user can select it to view the data
+    try:
+        if capture_dict_array[packet_number].get("Advertising Data") == 'N/A': # If the packet doesn't have advertising data
+            advertising_data_string = 'N/A' # Get the advertising data string to N/A
+        else: 
+            advertising_data_string = 'Click for more info' # Else set a string so the user can select it to view the data
+    except IndexError:
+        sg.popup_error('Packet with given number cannot be found')
+        return
 
     # Array containing packet details taken from capture
     packet_detail_list = [
@@ -867,16 +871,15 @@ side_column_layout = [
 # The layout of the main window.
 layout = [
     [sg.Text('Bluetooth Sniffing Application'), sg.Button('Live Capture'), sg.Button('Import PCAP'), sg.Button('Export PCAP'), sg.Button('Network Map'), sg.Button('About'), sg.Text('Theme:'), sg.Combo(sg.theme_list(), default_value=theme_name, key='Theme'), sg.Button('Update Theme')],
-    [sg.Text('Filter | Packet Type:'), sg.Combo(['Any', 'ADV_IND', 'ADV_DIRECT_IND', 'ADV_NONCONN_IND', 'SCAN_REQ', 'SCAN_RSP', 'CONNECT_REQ', 'ADV_SCAN_IND'], key='TypeFilter', default_value='Any', size=(30, 1)), sg.Text('Address:'), sg.Combo(['Any'], key='AddrFilter', default_value='Any', size=(30, 1)), sg.Button('Apply Filter'), sg.Text('Number of Packets That Match Filter: N/A', key='PacketNumberText')],
+    [sg.Text('Filter | Packet Type:'), sg.Combo(['Any', 'ADV_IND', 'ADV_DIRECT_IND', 'ADV_NONCONN_IND', 'SCAN_REQ', 'SCAN_RSP', 'CONNECT_REQ', 'ADV_SCAN_IND'], key='TypeFilter', default_value='Any', size=(30, 1)), sg.Text('Address:'), sg.Combo(['Any'], key='AddrFilter', default_value='Any', size=(30, 1)), sg.Button('Apply Filter'), sg.Text('Number of Packets That Match Filter: N/A', key='PacketNumberText'), sg.Text('Packet Number Search:'), sg.InputText('', key='PacketNumber', size=(8, 1)), sg.Button('Find Packet')],
     [sg.Frame('Bluetooth Packets', frame_layout_all_packets, font='Any 12', title_color='blue'),
     sg.Column(side_column_layout, justification='r')]
 ]
 
+MainWindow = sg.Window('Bluetooth Sniffing Application', layout, icon='icons/bluetooth.ico') # Main window variable and creation
 
 def main():
     """ Main function and the entry function for the application """
-    
-    MainWindow = sg.Window('Bluetooth Sniffing Application', layout, icon='icons/bluetooth.ico') # Main window variable and creation
 
     if not sys.platform.startswith('win32'): # If the OS running is not Windows
         sg.popup_error('Please run this application on Windows!', icon='icons/bluetooth.ico') # Tell the user that they need to run the app on Windows
@@ -903,6 +906,13 @@ def main():
             sg.popup('Theme configuration updated, please restart the application.', icon='icons/bluetooth.ico')
         if event1 == 'Live Capture': # If the user clicks on Live Capture, start the live capture function
             LiveCapture()
+        if event1 == 'Find Packet' and not PacketDetailsWindowActive: # If the user clicks on find packet button, find the packet they entered
+            if values1['PacketNumber'].isnumeric():
+                PacketDetailsWindowActive = True # Declare the packet details window is going to open
+                PacketDetailsPopup(int(values1['PacketNumber']), capture_dictionary) # Open the packet details window with the correct info and packet number
+                PacketDetailsWindowActive = False # After the window has closed, declare it is no longer active
+            else:
+                sg.popup_error('Please enter a number')
         if event1 == 'Import PCAP': # If the user clicks on the Import PCAP button, start the ImportPCAP function
             capture_dictionary = ImportPCAP()
         if event1 == 'Export PCAP': # If the user clicks on the Export PCAP button, start the ExportPCAP function
